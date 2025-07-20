@@ -1,0 +1,32 @@
+# Dependências
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Arquivos temporários
+temp/
+*.wav
+
+# Modelos Whisper (grandes)
+models/*.bin
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
