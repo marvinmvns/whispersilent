@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "created_at": "2025-07-21T01:47:29.444974",
+    "engine": "google",
+    "language": "pt-BR",
+    "audio_config": {
+      "sample_rate": 16000,
+      "channels": 1,
+      "device": "auto"
+    }
+  },
+  "stats": {
+    "session_start": "2025-07-21T01:45:31.358819",
+    "total_transcriptions": 6,
+    "total_audio_chunks": 40,
+    "successful_transcriptions": 1,
+    "empty_transcriptions": 5,
+    "errors": 0,
+    "engine_used": "google",
+    "last_update": "2025-07-21T01:47:27.355082"
+  },
+  "transcriptions": [
+    {
+      "id": 1,
+      "timestamp": "2025-07-21T01:47:19.442192",
+      "text": "",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2153.5625,
+        "sample_count": 34457,
+        "max_amplitude": 30327.0,
+        "rms_amplitude": 943.7255181384196
+      },
+      "engine": "google"
+    },
+    {
+      "id": 2,
+      "timestamp": "2025-07-21T01:47:21.346941",
+      "text": "",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2004.6249999999998,
+        "sample_count": 32074,
+        "max_amplitude": 32767.0,
+        "rms_amplitude": 1189.5783011015208
+      },
+      "engine": "google"
+    },
+    {
+      "id": 3,
+      "timestamp": "2025-07-21T01:47:23.638628",
+      "text": "testando 1 2 3 4",
+      "confidence": 0.8483,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 8483.0,
+        "rms_amplitude": 1070.2139062437457
+      },
+      "engine": "google"
+    },
+    {
+      "id": 4,
+      "timestamp": "2025-07-21T01:47:25.323423",
+      "text": "",
+      "confidence": 0.0798,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 798.0,
+        "rms_amplitude": 275.6962457978268
+      },
+      "engine": "google"
+    },
+    {
+      "id": 5,
+      "timestamp": "2025-07-21T01:47:27.354638",
+      "text": "",
+      "confidence": 0.0613,
+      "audio_info": {
+        "duration_ms": 2017.9999999999998,
+        "sample_count": 32288,
+        "max_amplitude": 613.0,
+        "rms_amplitude": 265.7655725801972
+      },
+      "engine": "google"
+    },
+    {
+      "id": 6,
+      "timestamp": "2025-07-21T01:47:29.444958",
+      "text": "",
+      "confidence": 0.0647,
+      "audio_info": {
+        "duration_ms": 2058.625,
+        "sample_count": 32938,
+        "max_amplitude": 647.0,
+        "rms_amplitude": 272.48843120278104
+      },
+      "engine": "google"
+    }
+  ]
+}

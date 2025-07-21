@@ -39,7 +39,7 @@ class JsonTranscriber:
         
         # Inicializar componentes de áudio e transcrição
         self.audio_capture = AudioCapture()
-        self.audio_processor = AudioProcessor()
+        self.audio_processor = AudioProcessor(self.audio_capture.q)
         
         # Forçar uso da API do Google (testada e funcional)
         os.environ['SPEECH_RECOGNITION_ENGINE'] = 'google'
