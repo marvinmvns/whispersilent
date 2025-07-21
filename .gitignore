@@ -30,3 +30,37 @@ Thumbs.db
 # Build
 dist/
 build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+
+# Binários e executáveis
+*.exe
+*.out
+*.app
+*.bin
+*.o
+*.a
+*.dll
+*.dylib
+whisper.cpp
+whisper
+main
+
+# Scripts de ambiente e instalação
+install.sh
+setup.sh
+*.install
+*.setup
+
+# Arquivos de configuração sensíveis
+config.ini
+settings.conf
+*.secret
+*.key

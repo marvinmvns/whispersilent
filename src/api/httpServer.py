@@ -7,6 +7,7 @@ import threading
 from dataclasses import asdict
 from logger import log
 from swagger import SWAGGER_SPEC, get_swagger_html
+from config import Config
 
 class TranscriptionHTTPHandler(BaseHTTPRequestHandler):
     def __init__(self, *args, pipeline=None, **kwargs):
@@ -253,6 +254,8 @@ class TranscriptionHTTPHandler(BaseHTTPRequestHandler):
         status = {
             "pipeline_running": self.pipeline.is_running,
             "api_sending_enabled": getattr(self.pipeline, 'api_sending_enabled', True),
+            "transcription_service": "google-transcribe" if Config.GOOGLE_TRANSCRIBE["enabled"] else "whisper.cpp",
+            "google_transcribe_configured": bool(Config.GOOGLE_TRANSCRIBE["endpoint"]),
             "uptime_seconds": time.time() - self.pipeline.health_monitor.start_time,
             "timestamp": time.time()
         }

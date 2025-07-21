@@ -10,38 +10,51 @@ This is a real-time audio transcription system designed for Raspberry Pi 2W with
 
 The system follows a modular pipeline architecture:
 
-1. **AudioCapture** (`audioCapture.py`) - ALSA interface for audio capture
-2. **AudioProcessor** (`audioProcessor.py`) - Speech detection and audio segmentation  
-3. **WhisperService** (`whisperService.py`) - Local transcription via whisper.cpp executable
-4. **ApiService** (`apiService.py`) - API client with retry logic
-5. **TranscriptionPipeline** (`transcriptionPipeline.py`) - Main orchestrator
-6. **Config** (`config.py`) - Centralized configuration management
-7. **Logger** (`logger.py`) - Logging system
+1. **AudioCapture** (`src/core/audioCapture.py`) - ALSA interface for audio capture
+2. **AudioProcessor** (`src/core/audioProcessor.py`) - Speech detection and audio segmentation  
+3. **SpeechRecognitionService** (`src/transcription/speechRecognitionService.py`) - Comprehensive transcription with 12+ engines
+4. **GoogleTranscribeService** (`src/transcription/googleTranscribeService.py`) - Legacy external transcription service
+5. **ApiService** (`src/api/apiService.py`) - API client with retry logic
+6. **TranscriptionPipeline** (`src/transcription/transcriptionPipeline.py`) - Main orchestrator
+7. **Config** (`src/core/config.py`) - Centralized configuration management
+8. **Logger** (`src/core/logger.py`) - Logging system
+9. **HTTPServer** (`src/api/httpServer.py`) - REST API for monitoring and control
+10. **HealthMonitor** (`src/services/healthMonitor.py`) - System health tracking
 
 ## Key Commands
 
 ### Setup and Installation
 ```bash
 # Complete automated installation (recommended)
-./install.sh
+./scripts/install_and_test.sh
+
+# Choose installation type:
+# 1. Full installation (system deps + Python deps + tests)
+# 2. Python dependencies only  
+# 3. System dependencies only
+# 4. Test existing installation
 
 # Manual installation steps:
 pip install -r requirements.txt
-python3 setup.py
+# Optional: Install specific speech recognition engines
+pip install "SpeechRecognition[pocketsphinx]"  # CMU Sphinx (offline)
+pip install "SpeechRecognition[vosk]"          # Vosk (offline) 
+pip install "SpeechRecognition[whisper-local]" # Local Whisper (offline)
 ```
 
 ### Running the System
 ```bash
 # Start with HTTP API server (recommended)
-python3 mainWithServer.py
+python3 src/mainWithServer.py
 
 # Start basic transcription only
-python3 main.py
+python3 src/main.py
 
-# Using helper scripts
-./start.sh      # Start the service
-./test.sh       # Run tests
-./status.sh     # Check service status
+# Test the system
+python3 tests/integration/test_full_system.py
+
+# Run installation test
+./scripts/install_and_test.sh
 ```
 
 ### Testing
@@ -80,6 +93,26 @@ The system uses environment variables loaded from `.env` file:
 - **CHUNK_DURATION_MS** - Audio chunk duration (default: 3000)
 - **SILENCE_THRESHOLD** - Silence detection threshold (default: 500)
 - **SILENCE_DURATION_MS** - Silence duration before processing (default: 1500)
+- **SPEECH_RECOGNITION_ENGINE** - Speech recognition engine to use (default: google)
+  - Available engines: google, google_cloud, sphinx, wit, azure, houndify, ibm, whisper_local, whisper_api, faster_whisper, groq, vosk, custom_endpoint
+- **SPEECH_RECOGNITION_LANGUAGE** - Language code for speech recognition (default: pt-BR)
+- **SPEECH_RECOGNITION_TIMEOUT** - Recognition timeout in seconds (default: 30)
+
+### Engine-Specific Configuration
+- **GOOGLE_CLOUD_CREDENTIALS_JSON** - Google Cloud credentials for google_cloud engine
+- **WIT_AI_KEY** - Wit.ai API key for wit engine
+- **AZURE_SPEECH_KEY** - Azure Speech API key for azure engine  
+- **HOUNDIFY_CLIENT_ID** - Houndify client ID for houndify engine
+- **OPENAI_API_KEY** - OpenAI API key for whisper_api engine
+- **GROQ_API_KEY** - Groq API key for groq engine
+- **VOSK_MODEL_PATH** - Path to Vosk model for vosk engine
+- **CUSTOM_SPEECH_ENDPOINT** - Custom API endpoint for custom_endpoint engine
+
+### Legacy Configuration (fallback)
+- **GOOGLE_TRANSCRIBE_ENABLED** - Use legacy Google transcription service (default: false)
+- **GOOGLE_TRANSCRIBE_ENDPOINT** - External transcription API endpoint
+- **GOOGLE_TRANSCRIBE_KEY** - External transcription API key
+- **GOOGLE_TRANSCRIBE_LANGUAGE** - Language code for external service (default: pt-BR)
 
 ## Important Implementation Details
 
@@ -87,8 +120,33 @@ The system uses environment variables loaded from `.env` file:
 1. Continuous audio capture via ALSA
 2. Real-time silence detection and voice activity detection
 3. Audio segmentation into processable chunks
-4. Local transcription using whisper.cpp subprocess
+4. Transcription via configurable speech recognition engine:
+   - **Google** (default): Free Google Speech Recognition API, requires internet
+   - **Google Cloud**: Paid Google Cloud Speech API, high quality, requires credentials
+   - **Sphinx**: Offline CMU Sphinx engine, moderate quality
+   - **Vosk**: Offline Vosk engine, good quality, requires model download
+   - **Whisper Local**: Offline OpenAI Whisper, best quality, high CPU usage
+   - **Whisper API**: Online OpenAI Whisper API, excellent quality, requires API key
+   - **Azure**: Microsoft Azure Speech API, requires API key
+   - **IBM**: IBM Speech to Text API, requires credentials
+   - **Wit.ai**: Facebook Wit.ai API, requires API key
+   - **Houndify**: SoundHound Houndify API, requires credentials
+   - **Groq**: Groq Whisper API, fast inference, requires API key
+   - **Custom Endpoint**: User-defined API endpoint for transcription
 5. Asynchronous API delivery with retry logic
+
+### Speech Recognition Engine Selection
+The system automatically selects the appropriate transcription engine based on the `SPEECH_RECOGNITION_ENGINE` environment variable. Feature toggles allow switching between:
+
+- **Offline Engines**: sphinx, vosk, whisper_local, faster_whisper
+- **Online Engines**: google, google_cloud, wit, azure, houndify, ibm, whisper_api, groq
+- **Custom Integration**: custom_endpoint for proprietary APIs
+
+### Engine Requirements
+- **Free Online**: google (no API key required, rate limited)
+- **Paid Online**: API keys/credentials required for all other online engines
+- **Offline**: Model files required for sphinx, vosk, whisper_local engines
+- **Hardware**: Offline engines may require significant CPU/memory resources
 
 ### Hardware Specifics
 - Optimized for Raspberry Pi 2W (4 threads, no GPU)

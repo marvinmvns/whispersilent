@@ -6,3 +6,16 @@ tqdm>=4.64.0
 wheel>=0.37.0
 psutil>=5.9.0
 pytest>=7.0.0
+
+# Speech Recognition Libraries
+SpeechRecognition>=3.10.0
+
+# Optional speech recognition engines
+# Install specific engines as needed:
+# pip install SpeechRecognition[pocketsphinx]  # CMU Sphinx (offline)
+# pip install SpeechRecognition[google-cloud]  # Google Cloud Speech API
+# pip install SpeechRecognition[vosk]          # Vosk API (offline)
+# pip install SpeechRecognition[whisper-local] # Whisper (offline)
+# pip install SpeechRecognition[faster-whisper] # Faster Whisper (offline)
+# pip install SpeechRecognition[openai]        # OpenAI Whisper API
+# pip install SpeechRecognition[groq]          # Groq Whisper API

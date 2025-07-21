@@ -3,6 +3,13 @@ import sys
 import signal
 import time
 from dotenv import load_dotenv
+
+# Add module paths
+sys.path.append(os.path.join(os.path.dirname(__file__), 'transcription'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'core'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'api'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'services'))
+
 from transcriptionPipeline import TranscriptionPipeline
 from logger import log
 from config import Config
@@ -26,11 +33,34 @@ def check_configuration():
             log.warning("No API_KEY configured - API requests may fail if authentication is required")
             log.info("Set API_KEY in .env file if your API requires authentication")
 
-    model_path = Config.WHISPER["model_path"]
-    if not os.path.exists(model_path):
-        log.error(f"Whisper model not found: {model_path}")
-        log.info("Run the setup script to download the model: python3 setup.py")
-        sys.exit(1)
+    # Check speech recognition engine configuration
+    engine = Config.SPEECH_RECOGNITION.get("engine", "google")
+    log.info(f"Configured speech recognition engine: {engine}")
+    
+    if engine == "vosk":
+        model_path = Config.SPEECH_RECOGNITION.get("vosk_model_path")
+        if not model_path or not os.path.exists(model_path):
+            log.error(f"Vosk model not found: {model_path}")
+            log.info("Download a Vosk model and set VOSK_MODEL_PATH in .env file")
+            sys.exit(1)
+    
+    # Check for API keys if using online services
+    online_engines = {
+        "google_cloud": "GOOGLE_CLOUD_CREDENTIALS_JSON",
+        "wit": "WIT_AI_KEY", 
+        "azure": "AZURE_SPEECH_KEY",
+        "houndify": "HOUNDIFY_CLIENT_ID",
+        "ibm": "IBM_SPEECH_USERNAME",
+        "whisper_api": "OPENAI_API_KEY",
+        "groq": "GROQ_API_KEY",
+        "custom_endpoint": "CUSTOM_SPEECH_ENDPOINT"
+    }
+    
+    if engine in online_engines:
+        required_var = online_engines[engine]
+        if not os.getenv(required_var):
+            log.warning(f"Engine '{engine}' requires {required_var} to be set in .env file")
+            log.info(f"Falling back to 'google' engine if available")
 
 def signal_handler(sig, frame):
     """Handles graceful shutdown on system signals."""

@@ -1,10 +1,20 @@
 import threading
 import time
 import queue
+import sys
+import os
+
+# Add parent directories to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'core'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'services'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'api'))
+
 from audioCapture import AudioCapture
 from audioProcessor import AudioProcessor
-from whisperService import WhisperService
+from speechRecognitionService import SpeechRecognitionService
+from googleTranscribeService import GoogleTranscribeService
 from apiService import ApiService
+from config import Config
 from healthMonitor import HealthMonitor
 from transcriptionStorage import TranscriptionStorage
 from transcriptionFiles import TranscriptionFileManager
@@ -17,7 +27,21 @@ class TranscriptionPipeline:
         
         self.audio_capture = AudioCapture()
         self.audio_processor = AudioProcessor(self.audio_queue) # AudioProcessor consumes from audio_queue
-        self.whisper_service = WhisperService()
+        
+        # Choose transcription service based on configuration
+        # Priority: SpeechRecognition > Google Transcribe > fallback
+        speech_engine = Config.SPEECH_RECOGNITION.get("engine", "").lower()
+        
+        if speech_engine and speech_engine != "disabled":
+            self.transcription_service = SpeechRecognitionService()
+            log.info(f"Using SpeechRecognition Service with {speech_engine} engine")
+        elif Config.GOOGLE_TRANSCRIBE["enabled"]:
+            self.transcription_service = GoogleTranscribeService()
+            log.info("Using Google Transcribe Service for transcription")
+        else:
+            log.error("No transcription service configured! Please set SPEECH_RECOGNITION_ENGINE or enable GOOGLE_TRANSCRIBE")
+            raise ValueError("No transcription service available")
+            
         self.api_service = ApiService()
         self.health_monitor = HealthMonitor(self)
         self.transcription_storage = TranscriptionStorage()
@@ -60,7 +84,7 @@ class TranscriptionPipeline:
             
             # Transcrever áudio
             log.info(f'Processando chunk de áudio ({audio_chunk.size} samples)...')
-            transcription = self.whisper_service.transcribe(audio_chunk)
+            transcription = self.transcription_service.transcribe(audio_chunk)
             
             if transcription and transcription.strip():
                 processing_time_ms = (time.time() - start_time) * 1000
@@ -93,10 +117,18 @@ class TranscriptionPipeline:
                 if self.api_sending_enabled:
                     try:
                         self.health_monitor.record_api_request_sent()
+                        # Determine service type for API metadata
+                        if hasattr(self.transcription_service, 'engine'):
+                            service_type = f"speech-recognition-{self.transcription_service.engine.value}"
+                        elif Config.GOOGLE_TRANSCRIBE["enabled"]:
+                            service_type = "google-transcribe"
+                        else:
+                            service_type = "unknown"
                         self.api_service.send_transcription(transcription, {
                             "chunkSize": audio_chunk.size, # Size in samples
                             "processingTimeMs": processing_time_ms,
-                            "recordId": record_id
+                            "recordId": record_id,
+                            "transcriptionService": service_type
                         })
                         # Mark as sent in storage
                         self.transcription_storage.mark_api_sent(record_id)
@@ -157,6 +189,6 @@ class TranscriptionPipeline:
                     log.warning("Processing thread did not terminate gracefully.")
 
             # Limpar arquivos temporários
-            self.whisper_service.cleanup()
+            self.transcription_service.cleanup()
             
             log.info('Pipeline de transcrição parado')
