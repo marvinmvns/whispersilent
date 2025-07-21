@@ -27,14 +27,14 @@ class CompleteSystemTester:
             from audioCapture import AudioCapture
             from audioProcessor import AudioProcessor
             from speechRecognitionService import SpeechRecognitionService
-            from apiService import APIService
+            from apiService import ApiService
             from healthMonitor import HealthMonitor
             from config import Config
             
             self.audio_capture = AudioCapture()
             self.audio_processor = AudioProcessor()
             self.speech_service = SpeechRecognitionService()
-            self.api_service = APIService()
+            self.api_service = ApiService()
             self.health_monitor = HealthMonitor()
             self.config = Config
             
