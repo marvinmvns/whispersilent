@@ -177,9 +177,9 @@ def run_quick_tests():
     
     # Teste de import dos módulos principais
     try:
-        sys.path.append('src/core')
-        sys.path.append('src/transcription')
-        sys.path.append('src/api')
+        sys.path.insert(0, 'src/core')
+        sys.path.insert(0, 'src/transcription')
+        sys.path.insert(0, 'src/api')
         
         from config import Config
         from speechRecognitionService import SpeechRecognitionService

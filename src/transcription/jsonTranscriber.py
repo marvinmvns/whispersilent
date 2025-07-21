@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'core'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'core'))
 from config import Config
 from logger import log
 from audioCapture import AudioCapture

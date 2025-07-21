@@ -13,10 +13,10 @@ import queue
 from typing import Dict, List, Optional
 
 # Adiciona o diretório src ao path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'core'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'transcription'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'api'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'core'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'transcription'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'api'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'services'))
 
 class CompleteSystemTester:
     """Testador completo do sistema WhisperSilent"""

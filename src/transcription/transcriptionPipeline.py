@@ -4,10 +4,10 @@ import queue
 import sys
 import os
 
-# Add parent directories to path for imports
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'core'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'services'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'api'))
+# Add parent directories to path for imports with higher priority
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'core'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'api'))
 
 from audioCapture import AudioCapture
 from audioProcessor import AudioProcessor

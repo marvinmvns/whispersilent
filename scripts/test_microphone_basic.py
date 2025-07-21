@@ -10,7 +10,7 @@ import time
 import numpy as np
 
 # Adiciona o diretório src ao path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'core'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'core'))
 
 def test_microphone_basic():
     """Teste básico e rápido do microfone"""

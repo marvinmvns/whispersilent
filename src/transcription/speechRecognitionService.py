@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any, Union
 from enum import Enum
 
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'core'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'core'))
 from config import Config
 from logger import log
 

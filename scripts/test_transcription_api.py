@@ -13,9 +13,9 @@ import tempfile
 from typing import Dict, List, Tuple
 
 # Adiciona o diretório src ao path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'core'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'transcription'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'api'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'core'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'transcription'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'api'))
 
 class TranscriptionAPITester:
     """Classe para testar APIs de transcrição"""
