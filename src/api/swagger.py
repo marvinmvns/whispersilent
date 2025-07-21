@@ -1,8 +1,15 @@
 """
 OpenAPI/Swagger documentation for WhisperSilent HTTP API
 """
+import os
+from core.config import Config
 
-SWAGGER_SPEC = {
+def get_swagger_spec():
+    """Get OpenAPI/Swagger specification with dynamic server URL"""
+    host = Config.HTTP_SERVER["host"]
+    port = Config.HTTP_SERVER["port"]
+    
+    return {
     "openapi": "3.0.0",
     "info": {
         "title": "WhisperSilent API",
@@ -15,8 +22,8 @@ SWAGGER_SPEC = {
     },
     "servers": [
         {
-            "url": "http://localhost:8080",
-            "description": "Local development server"
+            "url": f"http://{host}:{port}",
+            "description": "API Server"
         }
     ],
     "paths": {

@@ -104,3 +104,8 @@ class Config:
         "buffer_size": 4096,
         "temp_dir": os.path.join(os.path.dirname(__file__), "temp")
     }
+
+    HTTP_SERVER = {
+        "host": os.getenv("HTTP_SERVER_HOST", "localhost"),
+        "port": int(os.getenv("HTTP_SERVER_PORT", 8080))
+    }

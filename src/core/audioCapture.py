@@ -26,7 +26,7 @@ class AudioCapture:
         
         # Only log significant audio activity to avoid spam
         if audio_level > 100:  # Threshold for "significant" audio
-            print(f"🎵 [AUDIO IN] Level: {audio_level:6.0f} | Frames: {frames} | Queue size: {self.q.qsize()}")
+            pass  # Audio level monitoring removed
         
         # Ensure data is copied as it might be overwritten by PortAudio
         self.q.put(indata.copy())

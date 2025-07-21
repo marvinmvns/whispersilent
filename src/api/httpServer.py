@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any
 import threading
 from dataclasses import asdict
 from logger import log
-from swagger import SWAGGER_SPEC, get_swagger_html
+from swagger import get_swagger_spec, get_swagger_html
 from config import Config
 
 class TranscriptionHTTPHandler(BaseHTTPRequestHandler):
@@ -115,7 +115,7 @@ class TranscriptionHTTPHandler(BaseHTTPRequestHandler):
         
     def _handle_swagger_spec(self):
         """Serve OpenAPI specification"""
-        self._send_json_response(SWAGGER_SPEC)
+        self._send_json_response(get_swagger_spec())
             
     def _handle_health_check(self):
         """Basic health check endpoint"""
