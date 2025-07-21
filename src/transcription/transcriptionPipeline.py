@@ -53,6 +53,7 @@ class TranscriptionPipeline:
 
     def _processing_loop(self):
         log.info('Iniciando loop de processamento de áudio...')
+        chunk_count = 0
         try:
             # AudioCapture puts data into self.audio_queue
             # AudioProcessor consumes from self.audio_queue and yields processed chunks
@@ -61,15 +62,25 @@ class TranscriptionPipeline:
                     break
                 
                 if audio_chunk is not None and audio_chunk.size > 0:
-                    print(f"🔊 [AUDIO] Chunk detectado: {audio_chunk.size} samples")
+                    chunk_count += 1
+                    duration_seconds = audio_chunk.size / Config.AUDIO["sample_rate"]
+                    print(f"🔊 [AUDIO #{chunk_count:04d}] Chunk detectado: {audio_chunk.size} samples ({duration_seconds:.2f}s) - Processando...")
+                    log.info(f"Chunk #{chunk_count}: {audio_chunk.size} samples, {duration_seconds:.2f}s duration")
+                    
                     self.health_monitor.record_chunk_processed()
                     self.processed_audio_queue.put(audio_chunk)
                     self._process_chunk_from_queue() # Process immediately or in another thread
+                else:
+                    # Log periodic status even when no audio is detected
+                    if chunk_count % 50 == 0:  # Every 50 iterations without audio
+                        print(f"⏳ [STATUS] Aguardando áudio... ({chunk_count} iterações)")
 
         except Exception as e:
             log.error(f"Erro crítico no loop de processamento de áudio: {e}")
+            print(f"🚨 [ERRO CRÍTICO] Loop de processamento falhou: {e}")
         finally:
             log.info('Loop de processamento de áudio finalizado.')
+            print(f"🏁 [PIPELINE] Loop finalizado - Total de chunks processados: {chunk_count}")
             self.is_running = False # Ensure state is updated on exit
 
     def _process_chunk_from_queue(self):
@@ -82,17 +93,24 @@ class TranscriptionPipeline:
     def _process_audio_chunk(self, audio_chunk):
         try:
             start_time = time.time()
+            chunk_duration = audio_chunk.size / Config.AUDIO["sample_rate"]
             
             # Transcrever áudio
-            print(f"⚙️  [PROCESSING] Iniciando processamento do chunk...")
-            log.info(f'Processando chunk de áudio ({audio_chunk.size} samples)...')
+            print(f"⚙️  [PROCESSING] Iniciando transcr. engine: {getattr(self.transcription_service, 'engine', 'unknown')}")
+            log.info(f'Processando chunk de áudio ({audio_chunk.size} samples, {chunk_duration:.2f}s)...')
+            
             transcription = self.transcription_service.transcribe(audio_chunk)
+            processing_time_ms = (time.time() - start_time) * 1000
             
             if transcription and transcription.strip():
-                processing_time_ms = (time.time() - start_time) * 1000
+                words_count = len(transcription.split())
+                chars_count = len(transcription)
                 
-                # Debug output for transcription processing
-                print(f"📝 [PIPELINE] Transcrição processada em {processing_time_ms:.2f}ms")
+                # Enhanced transcription output
+                print(f"📝 [TRANSCRIÇÃO] ✅ Sucesso em {processing_time_ms:.0f}ms")
+                print(f"    📊 Texto: \"{transcription}\" ({words_count} palavras, {chars_count} chars)")
+                print(f"    ⏱️  Performance: {chunk_duration:.2f}s áudio → {processing_time_ms:.0f}ms processamento")
+                
                 log.info(f'Transcrição obtida em {processing_time_ms:.2f}ms: "{transcription}"')
                 
                 # Record successful transcription
@@ -106,23 +124,34 @@ class TranscriptionPipeline:
                     chunk_size=audio_chunk.size,
                     api_sent=False
                 )
-                print(f"💾 [STORAGE] Transcrição armazenada com ID: {record_id}")
                 
-                # Also store in daily file for chronological ordering
+                # Enhanced storage logging
+                total_transcriptions = len(self.transcription_storage.transcriptions)
+                print(f"💾 [STORAGE] ✅ Salvo ID: {record_id} (Total: {total_transcriptions} transcrições)")
+                
+                # Create detailed record for file storage
                 transcription_record = {
                     "id": record_id,
                     "text": transcription,
                     "timestamp": time.time(),
                     "processing_time_ms": processing_time_ms,
                     "chunk_size": audio_chunk.size,
+                    "chunk_duration_s": chunk_duration,
+                    "words_count": words_count,
+                    "chars_count": chars_count,
                     "api_sent": False
                 }
-                self.file_manager.append_to_daily_file(transcription_record)
+                
+                # Save to daily JSON file
+                json_file_path = self.file_manager.append_to_daily_file(transcription_record)
+                print(f"📄 [JSON] Salvo em: {os.path.basename(json_file_path)}")
                 
                 # Send to API only if enabled
                 if self.api_sending_enabled:
                     try:
-                        print(f"🌐 [API] Enviando transcrição para API...")
+                        api_endpoint = os.getenv('API_ENDPOINT', 'não configurado')
+                        print(f"🌐 [API] Enviando para: {api_endpoint}")
+                        
                         self.health_monitor.record_api_request_sent()
                         # Determine service type for API metadata
                         if hasattr(self.transcription_service, 'engine'):
@@ -131,29 +160,48 @@ class TranscriptionPipeline:
                             service_type = "google-transcribe"
                         else:
                             service_type = "unknown"
+                            
                         self.api_service.send_transcription(transcription, {
-                            "chunkSize": audio_chunk.size, # Size in samples
+                            "chunkSize": audio_chunk.size,
+                            "chunkDurationS": chunk_duration,
                             "processingTimeMs": processing_time_ms,
                             "recordId": record_id,
-                            "transcriptionService": service_type
+                            "transcriptionService": service_type,
+                            "wordsCount": words_count,
+                            "charsCount": chars_count
                         })
+                        
                         # Mark as sent in storage
                         self.transcription_storage.mark_api_sent(record_id)
+                        transcription_record["api_sent"] = True
                         api_sent = True
-                        print(f"✅ [API] Transcrição enviada com sucesso (ID: {record_id})")
+                        
+                        print(f"✅ [API] ✅ Enviado com sucesso (ID: {record_id})")
+                        log.info(f"API request successful for transcription {record_id}")
+                        
                     except Exception as api_error:
-                        print(f"🚨 [API] Falha ao enviar transcrição: {api_error}")
+                        print(f"🚨 [API] ❌ Erro: {str(api_error)[:100]}...")
                         self.health_monitor.record_api_request_failed(str(api_error))
                         log.error(f"Failed to send transcription to API: {api_error}")
                         # Don't raise - continue processing other chunks
                 else:
-                    print(f"⏸️  [API] Envio desabilitado - armazenado apenas localmente")
+                    print(f"⏸️  [API] Envio desabilitado - salvo apenas localmente")
                     log.debug("API sending disabled - transcription stored locally only")
+                    
+                # Summary line
+                status_icon = "✅" if api_sent else "💾"
+                print(f"{status_icon} [RESUMO] ID:{record_id} | {words_count}w | {processing_time_ms:.0f}ms | {'API+Local' if api_sent else 'Local'}")
+                print(f"{'─'*80}")
+                
             else:
-                print(f"🔇 [AUDIO] Silêncio detectado no chunk")
-                log.debug('Nenhuma fala detectada no chunk')
+                processing_time_ms = (time.time() - start_time) * 1000
+                print(f"🔇 [SILÊNCIO] Nenhuma fala detectada ({processing_time_ms:.0f}ms processamento)")
+                log.debug(f'Nenhuma fala detectada no chunk (processado em {processing_time_ms:.2f}ms)')
+                
         except Exception as e:
-            log.error(f'Erro ao processar chunk: {e}')
+            processing_time_ms = (time.time() - start_time) * 1000
+            print(f"🚨 [ERRO] Falha ao processar chunk: {str(e)[:100]}... ({processing_time_ms:.0f}ms)")
+            log.error(f'Erro ao processar chunk: {e}', exc_info=True)
             self.health_monitor.record_transcription_failure(str(e))
             # Continue processing next chunks even if an error occurs
 

@@ -18,7 +18,16 @@ class AudioCapture:
     def _callback(self, indata, frames, time, status):
         """This is called (from a separate thread) for each audio block."""
         if status:
-            log.warning(f"Audio callback status: {status}")
+            log.warning(f"🔴 [AUDIO CALLBACK] Status: {status}")
+            print(f"🔴 [AUDIO CALLBACK] Status: {status}")
+        
+        # Calculate audio level for monitoring
+        audio_level = np.max(np.abs(indata))
+        
+        # Only log significant audio activity to avoid spam
+        if audio_level > 100:  # Threshold for "significant" audio
+            print(f"🎵 [AUDIO IN] Level: {audio_level:6.0f} | Frames: {frames} | Queue size: {self.q.qsize()}")
+        
         # Ensure data is copied as it might be overwritten by PortAudio
         self.q.put(indata.copy())
 
@@ -92,16 +101,24 @@ class AudioCapture:
 
         try:
             device_config = Config.AUDIO["device"]
+            print(f"🔧 [AUDIO INIT] Configuração: {device_config}")
             device_id = self._resolve_device(device_config)
             
             if device_id is None:
                 # Último recurso: usar dispositivo padrão
                 log.warning("Usando dispositivo de entrada padrão do sistema")
+                print(f"⚠️  [AUDIO INIT] Fallback para dispositivo padrão")
                 device_id = sd.default.device[0]  # Dispositivo de entrada padrão
                 if device_id is None:
                     raise RuntimeError("Nenhum dispositivo de entrada disponível")
 
             self.device_info = sd.query_devices(device_id)
+            
+            # Enhanced device info logging
+            print(f"🎤 [AUDIO DEVICE] {self.device_info['name']} (ID: {device_id})")
+            print(f"    📊 Canais: {self.device_info['max_input_channels']} | Sample Rate: {self.device_info['default_samplerate']} Hz")
+            print(f"    ⚙️  Config: {Config.AUDIO['sample_rate']} Hz, {Config.AUDIO['channels']} canal(is)")
+            
             log.info(f"🎤 Usando dispositivo de áudio: {self.device_info['name']} (Índice: {device_id})")
             log.info(f"   Canais de entrada: {self.device_info['max_input_channels']}")
             log.info(f"   Taxa de amostra padrão: {self.device_info['default_samplerate']} Hz")
@@ -115,10 +132,13 @@ class AudioCapture:
             )
             self.stream.start()
             self.is_recording = True
+            
+            print(f"✅ [AUDIO STREAM] Captura iniciada - aguardando áudio...")
             log.info('✅ Captura de áudio iniciada com sucesso')
             return self.q # Return the queue for consumption
 
         except Exception as e:
+            print(f"🚨 [AUDIO ERROR] Falha na inicialização: {e}")
             log.error(f'❌ Erro ao iniciar captura: {e}')
             # Mostra dispositivos disponíveis para debug
             log.info("Dispositivos de áudio disponíveis:")

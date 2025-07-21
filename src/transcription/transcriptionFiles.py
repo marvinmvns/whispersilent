@@ -78,18 +78,26 @@ class TranscriptionFileManager:
             filename = self._get_daily_filename(date)
             filepath = os.path.join(self.storage_dir, "daily", filename)
             
+            # Enhanced file operation logging
+            file_exists = os.path.exists(filepath)
+            
             # Load existing data or create new
             daily_data = {
                 "date": date.strftime("%Y-%m-%d"),
                 "transcriptions": []
             }
             
-            if os.path.exists(filepath):
+            if file_exists:
                 try:
                     with open(filepath, 'r', encoding='utf-8') as f:
                         daily_data = json.load(f)
+                    existing_count = len(daily_data.get('transcriptions', []))
+                    print(f"📄 [JSON] Arquivo existente: {existing_count} transcrições")
                 except Exception as e:
+                    print(f"⚠️  [JSON] Erro lendo arquivo existente: {e}")
                     log.warning(f"Error reading existing daily file {filepath}: {e}")
+            else:
+                print(f"📄 [JSON] Criando novo arquivo: {filename}")
                     
             # Add new transcription
             daily_data["transcriptions"].append(transcription)
@@ -101,13 +109,25 @@ class TranscriptionFileManager:
             daily_data["last_updated"] = time.time()
             daily_data["total_transcriptions"] = len(daily_data["transcriptions"])
             
+            # Calculate additional stats for logging
+            total_chars = sum(len(t.get('text', '')) for t in daily_data["transcriptions"])
+            api_sent_count = sum(1 for t in daily_data["transcriptions"] if t.get('api_sent', False))
+            
             try:
                 with open(filepath, 'w', encoding='utf-8') as f:
                     json.dump(daily_data, f, indent=2, ensure_ascii=False)
-                    
+                
+                # Enhanced success logging with file statistics
+                file_size = os.path.getsize(filepath)
+                print(f"💾 [JSON FILE] ✅ Salvo: {daily_data['total_transcriptions']} transcrições")
+                print(f"    📊 Stats: {total_chars} chars | {api_sent_count}/{daily_data['total_transcriptions']} enviadas p/ API")
+                print(f"    📦 Arquivo: {file_size} bytes | {filepath}")
+                
+                log.info(f"Transcription appended to daily file: {filepath} (total: {daily_data['total_transcriptions']})")
                 return filepath
                 
             except Exception as e:
+                print(f"🚨 [JSON ERROR] Falha ao salvar arquivo: {e}")
                 log.error(f"Error appending to daily file: {e}")
                 raise
                 
