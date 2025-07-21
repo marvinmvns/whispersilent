@@ -76,9 +76,9 @@ python3 tests/integration/test_full_system.py
 ./scripts/install_and_test.sh
 ```
 
-### Testing
+### Testing and Validation
 ```bash
-# Run all tests
+# Run all pytest tests
 python -m pytest tests/
 
 # Run specific test file
@@ -86,6 +86,23 @@ python -m pytest tests/test_audioCapture.py
 
 # Run with verbose output
 python -m pytest tests/ -v
+
+# === NEW COMPREHENSIVE TESTING SYSTEM ===
+
+# Quick microphone validation (2 seconds)
+python3 scripts/test_microphone_basic.py
+
+# Complete transcription engine testing
+python3 scripts/test_transcription_api.py
+
+# Full system integration test (20+ seconds)
+python3 scripts/test_complete_system.py
+
+# Installation validation and health check
+python3 scripts/validate_installation.py
+
+# Original integration test
+python3 tests/integration/test_full_system.py
 ```
 
 ### Audio Troubleshooting
@@ -212,9 +229,17 @@ The system automatically selects the appropriate transcription engine based on t
 
 ### Enhanced Installation & Setup
 - **Enhanced Setup** (`setup.py`) - Architecture detection and optimized compilation
-- **Installation Script** (`install.sh`) - Comprehensive automated installation with testing
+- **Installation Script** (`install_and_test.sh`) - Comprehensive automated installation with testing
 - Dependency checking, virtual environment setup, and validation
 - System service creation and helper scripts
+
+### Comprehensive Testing System
+- **Basic Microphone Test** (`test_microphone_basic.py`) - Quick 2-second audio capture validation
+- **Transcription API Test** (`test_transcription_api.py`) - Tests all available speech recognition engines
+- **Complete System Test** (`test_complete_system.py`) - Full integration test with real-time audio processing
+- **Installation Validator** (`validate_installation.py`) - Comprehensive system validation and health check
+- Automatic integration with setup process for immediate validation
+- Progressive testing from basic to advanced functionality
 
 ### API Control Features
 - Toggle for proactive API sending (can disable automatic API calls)
@@ -241,6 +266,35 @@ The system automatically selects the appropriate transcription engine based on t
 - `POST /control/toggle-api-sending` - Enable/disable automatic API sending
 - `POST /control/start` - Start pipeline
 - `POST /control/stop` - Stop pipeline
+
+## Testing and Validation Workflow
+
+### Installation Testing Process
+1. **Automated Setup Tests** - Run during `./scripts/install_and_test.sh`
+   - Module import validation
+   - Configuration loading verification
+   - Basic microphone functionality test
+   - Transcription engine availability check
+
+2. **Manual Testing Options**
+   - **Quick Validation**: `python scripts/test_microphone_basic.py` (2s test)
+   - **Engine Testing**: `python scripts/test_transcription_api.py` (comprehensive engine validation)
+   - **Full System Test**: `python scripts/test_complete_system.py` (20+ second real-time test)
+   - **Health Check**: `python scripts/validate_installation.py` (installation verification)
+
+### Test Coverage
+- **Audio Capture**: Device detection, initialization, real-time capture with signal analysis
+- **Speech Recognition**: All 12+ engines tested with mock and real audio data
+- **API Integration**: Connection testing, data sending validation, response time measurement
+- **System Integration**: End-to-end workflow from audio capture to API delivery
+- **Error Handling**: Network failures, device issues, engine switching, timeout scenarios
+
+### Test Output and Reporting
+- Real-time progress indicators with emoji status
+- Detailed performance metrics (processing times, success rates, amplitude analysis)
+- Comprehensive error reporting with suggested solutions
+- Final validation reports with component status and next steps
+- Integration with setup process for immediate feedback
 
 ## Whisper.cpp Integration
 

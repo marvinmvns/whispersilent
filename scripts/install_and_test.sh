@@ -465,14 +465,14 @@ setup_environment_file() {
     fi
 }
 
-# Function to run complete system test
+# Function to run comprehensive system tests
 run_system_test() {
-    print_status "Running complete system test..."
+    print_status "Running comprehensive system tests..."
     
     cd "$PROJECT_ROOT"
     source venv/bin/activate
     
-    # Test imports
+    # Test 1: Module imports
     print_status "Testing module imports..."
     $PYTHON_BIN -c "
 import sys
@@ -494,7 +494,7 @@ print('All imports successful!')
         return 1
     fi
     
-    # Test configuration
+    # Test 2: Configuration
     print_status "Testing configuration..."
     $PYTHON_BIN -c "
 import sys
@@ -504,6 +504,22 @@ print(f'Audio sample rate: {Config.AUDIO[\"sample_rate\"]}')
 print(f'Speech engine: {Config.SPEECH_RECOGNITION[\"engine\"]}')
 print('Configuration test passed!')
 "
+    
+    # Test 3: Basic microphone test
+    print_status "Running basic microphone test..."
+    if $PYTHON_BIN scripts/test_microphone_basic.py; then
+        print_success "Basic microphone test passed"
+    else
+        print_warning "Basic microphone test had issues - check device configuration"
+    fi
+    
+    # Test 4: Transcription API test
+    print_status "Running transcription API test..."
+    if $PYTHON_BIN scripts/test_transcription_api.py; then
+        print_success "Transcription API test passed"
+    else
+        print_warning "Transcription API test had issues - check configuration"
+    fi
     
     print_success "System test completed successfully"
 }
@@ -531,13 +547,21 @@ show_final_instructions() {
     echo "3. For Raspberry Pi with Seeed VoiceCard, verify audio device:"
     echo "   arecord -l"
     echo ""
-    echo "4. Start the transcription system:"
+    echo "4. Run comprehensive system test (optional):"
+    echo "   python scripts/test_complete_system.py"
+    echo ""
+    echo "5. Start the transcription system:"
     echo "   cd $PROJECT_ROOT"
     echo "   source venv/bin/activate"
     echo "   python src/mainWithServer.py"
     echo ""
-    echo "5. Access the web interface:"
+    echo "6. Access the web interface:"
     echo "   http://localhost:8000"
+    echo ""
+    echo "Available test scripts:"
+    echo "   - scripts/test_microphone_basic.py (quick microphone test)"
+    echo "   - scripts/test_transcription_api.py (transcription engines test)"
+    echo "   - scripts/test_complete_system.py (full system test)"
     echo ""
     echo "For help and documentation, see:"
     echo "   - CLAUDE.md (project documentation)"
@@ -601,6 +625,15 @@ main() {
             test_audio_system
             test_speech_recognition
             run_system_test
+            
+            # Ask if user wants to run comprehensive test
+            echo ""
+            read -p "Run comprehensive system test? (y/N): " run_comprehensive
+            if [[ $run_comprehensive =~ ^[Yy]$ ]]; then
+                print_status "Running comprehensive system test..."
+                $PYTHON_BIN scripts/test_complete_system.py
+            fi
+            
             print_success "Installation test completed"
             ;;
         *)

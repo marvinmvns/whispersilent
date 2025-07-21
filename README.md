@@ -57,7 +57,9 @@ O script de instalação vai:
 - ✅ Configurar ambiente Python virtual
 - ✅ Compilar Whisper.cpp otimizado para sua arquitetura
 - ✅ Baixar modelo de transcrição
-- ✅ Executar testes de validação
+- ✅ **Executar testes abrangentes de validação**
+- ✅ **Testar captura de microfone automaticamente**
+- ✅ **Validar engines de transcrição disponíveis**
 - ✅ Criar scripts auxiliares e serviço systemd
 
 ### Instalação Manual
@@ -202,10 +204,25 @@ python3 main.py
 - **Documentação API**: http://localhost:8080/api-docs
 - **Transcrições**: http://localhost:8080/transcriptions
 
-### Scripts Auxiliares
+### Scripts de Teste e Validação
 
 ```bash
-./test.sh       # Executar testes
+# === NOVOS SCRIPTS DE TESTE ABRANGENTES ===
+
+# Teste rápido de microfone (2 segundos)
+python scripts/test_microphone_basic.py
+
+# Teste completo de engines de transcrição
+python scripts/test_transcription_api.py
+
+# Teste integrado completo do sistema (20+ segundos)
+python scripts/test_complete_system.py
+
+# Validação completa da instalação
+python scripts/validate_installation.py
+
+# === SCRIPTS AUXILIARES ===
+./test.sh       # Executar testes pytest
 ./status.sh     # Verificar status do sistema
 ```
 
@@ -520,9 +537,14 @@ whispersilent/
 │   │   └── transcriptionFiles.py       # Gerenciamento de arquivos
 │   └── services/               # Serviços auxiliares
 │       └── healthMonitor.py    # Monitoramento de saúde
-├── scripts/                    # Scripts de automação
-│   └── install_and_test.sh    # Instalação completa com testes
-├── tests/                      # Suíte de testes
+├── scripts/                    # Scripts de automação e teste
+│   ├── install_and_test.sh    # Instalação completa com testes
+│   ├── test_microphone_basic.py       # Teste rápido de microfone
+│   ├── test_transcription_api.py      # Teste de engines de transcrição
+│   ├── test_complete_system.py        # Teste integrado completo
+│   ├── validate_installation.py       # Validação da instalação
+│   └── detect_audio_devices.py        # Detecção de dispositivos de áudio
+├── tests/                      # Suíte de testes pytest
 ├── install.sh                  # Script de instalação alternativo
 ├── requirements.txt           # Dependências Python
 ├── setup.py                   # Compilação e download de modelos
@@ -540,7 +562,7 @@ whispersilent/
 1. **Fork** o repositório
 2. **Clone** seu fork: `git clone https://github.com/seu-usuario/whispersilent.git`
 3. **Branch**: `git checkout -b feature/nova-funcionalidade`
-4. **Desenvolva** com testes: `./test.sh`
+4. **Desenvolva** com testes: `python scripts/test_complete_system.py`
 5. **Commit**: `git commit -m 'feat: adiciona nova funcionalidade'`
 6. **Push**: `git push origin feature/nova-funcionalidade`
 7. **Pull Request** com descrição detalhada
@@ -569,6 +591,37 @@ whispersilent/
 - 🧵 **Threading** otimizado para número de cores
 - 💾 **Buffer circular** para eficiência de memória
 - 🧹 **Cleanup automático** de arquivos temporários
+
+## 🧪 Sistema de Testes
+
+### Testes Automatizados na Instalação
+- ✅ **Teste de Imports**: Validação de módulos essenciais
+- ✅ **Teste de Configuração**: Verificação de settings válidos  
+- ✅ **Teste de Microfone**: Captura básica de áudio (2s)
+- ✅ **Teste de Engines**: Validação de engines de transcrição disponíveis
+
+### Testes Manuais Disponíveis
+```bash
+# Teste básico e rápido (2 segundos)
+python scripts/test_microphone_basic.py
+
+# Teste de engines de transcrição (offline + online)
+python scripts/test_transcription_api.py
+
+# Teste completo com áudio real (20+ segundos)
+python scripts/test_complete_system.py
+
+# Validação completa da instalação
+python scripts/validate_installation.py
+```
+
+### Características dos Testes
+- 🎯 **Progressivos**: Do básico ao avançado
+- 📊 **Informativos**: Feedback detalhado com métricas
+- 🔧 **Robustos**: Tratamento de erros e timeouts
+- 🌐 **Compatíveis**: Funcionam offline e online
+- ⚡ **Rápidos**: Teste básico em 2 segundos
+- 📈 **Analíticos**: Métricas de performance e qualidade
 
 ## 🐛 Problemas Conhecidos
 
