@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'core'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'api'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
 
-from transcriptionPipeline import TranscriptionPipeline
+from jsonTranscriber import JsonTranscriber
 from httpServer import TranscriptionHTTPServer
 from logger import log
 from config import Config
@@ -18,8 +18,11 @@ from config import Config
 # Load environment variables from .env file
 load_dotenv()
 
-# Instantiate pipeline and server for global access
-pipeline = TranscriptionPipeline()
+# Forçar engine do Google antes de importar (testado e funcionando)
+os.environ['SPEECH_RECOGNITION_ENGINE'] = 'google'
+
+# Instantiate transcriber and server for global access
+json_transcriber = JsonTranscriber("transcriptions_server.json")
 http_server = None
 
 def check_configuration():
@@ -30,8 +33,6 @@ def check_configuration():
     if not api_endpoint:
         log.warning("⚠️  No API_ENDPOINT configured - API sending will be disabled")
         log.info("💡 Set API_ENDPOINT in .env file to enable API functionality")
-        # Disable API sending if no endpoint is configured
-        pipeline.api_sending_enabled = False
     else:
         log.info(f"✅ API endpoint configured: {api_endpoint[:50]}...")
         api_key = os.getenv('API_KEY')
@@ -76,6 +77,96 @@ def check_configuration():
     log.info("✅ Configuration check completed")
     return True
 
+# Servidor HTTP simplificado para JsonTranscriber
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
+import threading
+
+class SimpleTranscriptionHandler(BaseHTTPRequestHandler):
+    def __init__(self, *args, transcriber=None, **kwargs):
+        self.transcriber = transcriber
+        super().__init__(*args, **kwargs)
+        
+    def log_message(self, format, *args):
+        # Silenciar logs do servidor HTTP
+        pass
+        
+    def _send_json_response(self, data, status_code=200):
+        """Send a JSON response"""
+        response = json.dumps(data, indent=2, ensure_ascii=False)
+        self.send_response(status_code)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Content-Length', str(len(response.encode('utf-8'))))
+        self.send_header('Access-Control-Allow-Origin', '*')  # CORS
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.end_headers()
+        self.wfile.write(response.encode('utf-8'))
+        
+    def do_OPTIONS(self):
+        """Handle CORS preflight requests"""
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.end_headers()
+        
+    def do_GET(self):
+        """Handle GET requests"""
+        path = urlparse(self.path).path
+        
+        if path == '/health':
+            self._send_json_response({
+                "status": "healthy",
+                "transcriber_running": self.transcriber.is_running,
+                "engine": self.transcriber.speech_service.engine.value,
+                "timestamp": time.time()
+            })
+        elif path == '/stats':
+            stats = self.transcriber.get_stats()
+            self._send_json_response(stats)
+        elif path == '/transcriptions':
+            # Parse query parameters
+            query = parse_qs(urlparse(self.path).query)
+            limit = int(query.get('limit', [10])[0])
+            
+            transcriptions = self.transcriber.get_transcriptions(limit=limit)
+            self._send_json_response({
+                "transcriptions": transcriptions,
+                "count": len(transcriptions),
+                "total": len(self.transcriber.transcriptions)
+            })
+        else:
+            self._send_json_response({"error": "Not found"}, 404)
+
+class SimpleTranscriptionHTTPServer:
+    def __init__(self, transcriber, host='localhost', port=8080):
+        self.transcriber = transcriber
+        self.host = host
+        self.port = port
+        self.server = None
+        self.server_thread = None
+        
+    def start(self):
+        """Start the HTTP server in a separate thread"""
+        def handler(*args, **kwargs):
+            return SimpleTranscriptionHandler(*args, transcriber=self.transcriber, **kwargs)
+            
+        self.server = HTTPServer((self.host, self.port), handler)
+        self.server_thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.server_thread.start()
+        log.info(f"HTTP server started on {self.host}:{self.port}")
+        
+    def stop(self):
+        """Stop the HTTP server"""
+        if self.server:
+            self.server.shutdown()
+            self.server.server_close()
+            if self.server_thread:
+                self.server_thread.join(timeout=1)
+            log.info("HTTP server stopped")
+
 def signal_handler(sig, frame):
     """Handles graceful shutdown on system signals."""
     log.info(f'Received signal {signal.Signals(sig).name}, shutting down...')
@@ -84,9 +175,9 @@ def signal_handler(sig, frame):
     if 'http_server' in globals() and http_server:
         http_server.stop()
         
-    # Stop pipeline
-    if 'pipeline' in globals() and pipeline.is_running:
-        pipeline.stop()
+    # Stop transcriber
+    if 'json_transcriber' in globals() and json_transcriber.is_running:
+        json_transcriber.stop()
     
     sys.exit(0)
 
@@ -101,13 +192,13 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     # Stop services
     if 'http_server' in globals() and http_server:
         http_server.stop()
-    if 'pipeline' in globals() and pipeline.is_running:
-        pipeline.stop()
+    if 'json_transcriber' in globals() and json_transcriber.is_running:
+        json_transcriber.stop()
     sys.exit(1)
 
 def main():
     """Main application function."""
-    global http_server, pipeline
+    global http_server, json_transcriber
     
     # Configure signal and exception handlers
     signal.signal(signal.SIGINT, signal_handler)
@@ -124,46 +215,47 @@ def main():
             sys.exit(1)
         
         # Get HTTP server configuration
-        http_host = os.getenv('HTTP_HOST', 'localhost')
+        http_host = os.getenv('HTTP_HOST', '0.0.0.0')  # Allow external connections
         http_port = int(os.getenv('HTTP_PORT', 8080))
         
         log.info(f'🌐 Starting HTTP server on {http_host}:{http_port}...')
-        http_server = TranscriptionHTTPServer(pipeline, http_host, http_port)
+        # Create a simplified server that works with JsonTranscriber
+        http_server = SimpleTranscriptionHTTPServer(json_transcriber, http_host, http_port)
         http_server.start()
         
         log.info(f'✅ HTTP server initialized')
-        log.info(f'🎯 Engine: {Config.SPEECH_RECOGNITION.get("engine", "google")}')
-        log.info(f'🌍 Language: {Config.SPEECH_RECOGNITION.get("language", "pt-BR")}')
+        log.info(f'🎯 Engine: {json_transcriber.speech_service.engine.value}')
+        log.info(f'🌍 Language: {json_transcriber.speech_service.language}')
         
-        log.info('🚀 Starting transcription pipeline...')
-        pipeline.start()
+        log.info('🚀 Starting transcription system...')
+        json_transcriber.start()
         
         log.info('\n' + '='*60)
         log.info('✅ SYSTEM READY!')
         log.info('🎤 Speak into the microphone to transcribe')
-        log.info('📝 Transcriptions will be stored locally and sent to API (if enabled)')
-        log.info(f'🌐 HTTP API available at: {http_server.get_url()}')
+        log.info('📝 Transcriptions will be stored in JSON format')
+        log.info(f'🌐 HTTP API available at: http://{http_host}:{http_port}')
         log.info('⚠️  Use CTRL+C to stop')
         log.info('='*60)
         
         log.info('📋 Available HTTP endpoints:')
-        log.info(f'   Health Check: {http_server.get_url()}/health')
-        log.info(f'   Transcriptions: {http_server.get_url()}/transcriptions')
-        log.info(f'   API Documentation: {http_server.get_url()}/api-docs')
-        log.info(f'   Control: {http_server.get_url()}/control/toggle-api-sending')
+        log.info(f'   Health Check: http://{http_host}:{http_port}/health')
+        log.info(f'   Transcriptions: http://{http_host}:{http_port}/transcriptions')
+        log.info(f'   Stats: http://{http_host}:{http_port}/stats')
         log.info('')
         
         # Keep the main thread alive while services are running
         start_time = time.time()
         last_status = start_time
         
-        while pipeline.is_running:
+        while json_transcriber.is_running:
             current_time = time.time()
             
             # Show status periodically
             if current_time - last_status > 30:  # Every 30 seconds
                 uptime = current_time - start_time
-                log.info(f'📊 [{uptime:.0f}s] System running - HTTP API active at {http_server.get_url()}')
+                stats = json_transcriber.get_stats()
+                log.info(f'📊 [{uptime:.0f}s] System running - Transcrições: {stats.get("successful_transcriptions", 0)}')
                 last_status = current_time
             
             time.sleep(0.5)
@@ -178,20 +270,20 @@ def main():
             log.info("🛑 Stopping HTTP server...")
             http_server.stop()
             
-        if 'pipeline' in globals() and pipeline.is_running:
-            log.info("🛑 Finalizing transcription pipeline...")
-            pipeline.stop()
+        if 'json_transcriber' in globals() and json_transcriber.is_running:
+            log.info("🛑 Finalizing transcription system...")
+            json_transcriber.stop()
             
             # Show final stats if available
-            if hasattr(pipeline, 'transcription_storage'):
-                try:
-                    stats = pipeline.transcription_storage.get_statistics()
-                    log.info(f"\n📊 FINAL RESULTS:")
-                    log.info(f"   Total transcriptions: {stats.get('total_transcriptions', 0)}")
-                    log.info(f"   Successful: {stats.get('successful_transcriptions', 0)}")
-                    log.info(f"   Errors: {stats.get('failed_transcriptions', 0)}")
-                except Exception:
-                    pass
+            try:
+                stats = json_transcriber.get_stats()
+                log.info(f"\n📊 FINAL RESULTS:")
+                log.info(f"   Total transcriptions: {stats.get('total_transcriptions', 0)}")
+                log.info(f"   Successful: {stats.get('successful_transcriptions', 0)}")
+                log.info(f"   Errors: {stats.get('errors', 0)}")
+                log.info(f"   JSON file: {json_transcriber.output_file}")
+            except Exception:
+                pass
             
         log.info("✅ Application terminated successfully!")
 

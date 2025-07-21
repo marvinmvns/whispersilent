@@ -1,0 +1,453 @@
+{
+  "metadata": {
+    "created_at": "2025-07-21T20:12:51.276162",
+    "engine": "google",
+    "language": "pt-BR",
+    "audio_config": {
+      "sample_rate": 16000,
+      "channels": 1,
+      "device": "auto"
+    }
+  },
+  "stats": {
+    "session_start": "2025-07-21T20:11:55.505340",
+    "total_transcriptions": 33,
+    "total_audio_chunks": 33,
+    "successful_transcriptions": 4,
+    "empty_transcriptions": 29,
+    "errors": 0,
+    "engine_used": "google",
+    "last_update": "2025-07-21T20:12:51.271233"
+  },
+  "transcriptions": [
+    {
+      "id": 1,
+      "timestamp": "2025-07-21T20:11:25.020263",
+      "text": "",
+      "confidence": 0.1273,
+      "audio_info": {
+        "duration_ms": 2022.875,
+        "sample_count": 32366,
+        "max_amplitude": 1273.0,
+        "rms_amplitude": 332.8449774241423
+      },
+      "engine": "google"
+    },
+    {
+      "id": 2,
+      "timestamp": "2025-07-21T20:11:27.067938",
+      "text": "",
+      "confidence": 0.1466,
+      "audio_info": {
+        "duration_ms": 2026.6875,
+        "sample_count": 32427,
+        "max_amplitude": 1466.0,
+        "rms_amplitude": 340.21465685108274
+      },
+      "engine": "google"
+    },
+    {
+      "id": 3,
+      "timestamp": "2025-07-21T20:11:29.116121",
+      "text": "",
+      "confidence": 0.1218,
+      "audio_info": {
+        "duration_ms": 2026.6250000000002,
+        "sample_count": 32426,
+        "max_amplitude": 1218.0,
+        "rms_amplitude": 332.71845057549547
+      },
+      "engine": "google"
+    },
+    {
+      "id": 4,
+      "timestamp": "2025-07-21T20:11:31.130131",
+      "text": "Alô AL",
+      "confidence": 0.9018,
+      "audio_info": {
+        "duration_ms": 2003.1875000000002,
+        "sample_count": 32051,
+        "max_amplitude": 9018.0,
+        "rms_amplitude": 1556.2377975203935
+      },
+      "engine": "google"
+    },
+    {
+      "id": 5,
+      "timestamp": "2025-07-21T20:11:33.178239",
+      "text": "Alô AL",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2007.4999999999998,
+        "sample_count": 32120,
+        "max_amplitude": 30304.0,
+        "rms_amplitude": 4636.564259093672
+      },
+      "engine": "google"
+    },
+    {
+      "id": 6,
+      "timestamp": "2025-07-21T20:11:35.055988",
+      "text": "",
+      "confidence": 0.7292,
+      "audio_info": {
+        "duration_ms": 2016.0,
+        "sample_count": 32256,
+        "max_amplitude": 7292.0,
+        "rms_amplitude": 531.3996932832925
+      },
+      "engine": "google"
+    },
+    {
+      "id": 7,
+      "timestamp": "2025-07-21T20:11:59.076346",
+      "text": "",
+      "confidence": 0.6238,
+      "audio_info": {
+        "duration_ms": 2003.4999999999998,
+        "sample_count": 32056,
+        "max_amplitude": 6238.0,
+        "rms_amplitude": 1355.690976928419
+      },
+      "engine": "google"
+    },
+    {
+      "id": 8,
+      "timestamp": "2025-07-21T20:12:01.064574",
+      "text": "",
+      "confidence": 0.3765,
+      "audio_info": {
+        "duration_ms": 2003.3750000000002,
+        "sample_count": 32054,
+        "max_amplitude": 3765.0,
+        "rms_amplitude": 1030.528075291467
+      },
+      "engine": "google"
+    },
+    {
+      "id": 9,
+      "timestamp": "2025-07-21T20:12:03.938339",
+      "text": "tarararararara",
+      "confidence": 0.3375,
+      "audio_info": {
+        "duration_ms": 2016.0,
+        "sample_count": 32256,
+        "max_amplitude": 3375.0,
+        "rms_amplitude": 651.3873849220716
+      },
+      "engine": "google"
+    },
+    {
+      "id": 10,
+      "timestamp": "2025-07-21T20:12:05.267290",
+      "text": "",
+      "confidence": 0.4139,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 4139.0,
+        "rms_amplitude": 683.9993101972541
+      },
+      "engine": "google"
+    },
+    {
+      "id": 11,
+      "timestamp": "2025-07-21T20:12:07.105844",
+      "text": "",
+      "confidence": 0.1235,
+      "audio_info": {
+        "duration_ms": 2007.3124999999998,
+        "sample_count": 32117,
+        "max_amplitude": 1235.0,
+        "rms_amplitude": 335.37589062509994
+      },
+      "engine": "google"
+    },
+    {
+      "id": 12,
+      "timestamp": "2025-07-21T20:12:09.082302",
+      "text": "",
+      "confidence": 0.7687,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 7687.0,
+        "rms_amplitude": 884.993426892164
+      },
+      "engine": "google"
+    },
+    {
+      "id": 13,
+      "timestamp": "2025-07-21T20:12:11.100397",
+      "text": "",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2003.3124999999998,
+        "sample_count": 32053,
+        "max_amplitude": 12771.0,
+        "rms_amplitude": 2204.338190241159
+      },
+      "engine": "google"
+    },
+    {
+      "id": 14,
+      "timestamp": "2025-07-21T20:12:13.163722",
+      "text": "",
+      "confidence": 0.5585,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 5585.0,
+        "rms_amplitude": 1032.3369889984224
+      },
+      "engine": "google"
+    },
+    {
+      "id": 15,
+      "timestamp": "2025-07-21T20:12:15.196143",
+      "text": "",
+      "confidence": 0.5195,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 5195.0,
+        "rms_amplitude": 1117.7867526518316
+      },
+      "engine": "google"
+    },
+    {
+      "id": 16,
+      "timestamp": "2025-07-21T20:12:17.107056",
+      "text": "",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 32767.0,
+        "rms_amplitude": 2079.000061877184
+      },
+      "engine": "google"
+    },
+    {
+      "id": 17,
+      "timestamp": "2025-07-21T20:12:19.132195",
+      "text": "",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 12240.0,
+        "rms_amplitude": 2242.155568142722
+      },
+      "engine": "google"
+    },
+    {
+      "id": 18,
+      "timestamp": "2025-07-21T20:12:21.105736",
+      "text": "",
+      "confidence": 0.4606,
+      "audio_info": {
+        "duration_ms": 2007.3124999999998,
+        "sample_count": 32117,
+        "max_amplitude": 4606.0,
+        "rms_amplitude": 1172.6548055948344
+      },
+      "engine": "google"
+    },
+    {
+      "id": 19,
+      "timestamp": "2025-07-21T20:12:23.105615",
+      "text": "",
+      "confidence": 0.5981,
+      "audio_info": {
+        "duration_ms": 2003.3124999999998,
+        "sample_count": 32053,
+        "max_amplitude": 5981.0,
+        "rms_amplitude": 1472.8531571791357
+      },
+      "engine": "google"
+    },
+    {
+      "id": 20,
+      "timestamp": "2025-07-21T20:12:25.231168",
+      "text": "",
+      "confidence": 0.6665,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 6665.0,
+        "rms_amplitude": 1519.986840756542
+      },
+      "engine": "google"
+    },
+    {
+      "id": 21,
+      "timestamp": "2025-07-21T20:12:27.116300",
+      "text": "",
+      "confidence": 0.4564,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 4564.0,
+        "rms_amplitude": 1081.5982393421236
+      },
+      "engine": "google"
+    },
+    {
+      "id": 22,
+      "timestamp": "2025-07-21T20:12:29.224876",
+      "text": "",
+      "confidence": 0.5519,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 5519.0,
+        "rms_amplitude": 1098.1994315799468
+      },
+      "engine": "google"
+    },
+    {
+      "id": 23,
+      "timestamp": "2025-07-21T20:12:31.364922",
+      "text": "mulhe",
+      "confidence": 0.3823,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 3823.0,
+        "rms_amplitude": 1042.0739637773663
+      },
+      "engine": "google"
+    },
+    {
+      "id": 24,
+      "timestamp": "2025-07-21T20:12:33.152651",
+      "text": "",
+      "confidence": 0.508,
+      "audio_info": {
+        "duration_ms": 2007.3124999999998,
+        "sample_count": 32117,
+        "max_amplitude": 5080.0,
+        "rms_amplitude": 1117.2455588168689
+      },
+      "engine": "google"
+    },
+    {
+      "id": 25,
+      "timestamp": "2025-07-21T20:12:35.131315",
+      "text": "",
+      "confidence": 0.2052,
+      "audio_info": {
+        "duration_ms": 2003.3124999999998,
+        "sample_count": 32053,
+        "max_amplitude": 2052.0,
+        "rms_amplitude": 341.620138279505
+      },
+      "engine": "google"
+    },
+    {
+      "id": 26,
+      "timestamp": "2025-07-21T20:12:37.000264",
+      "text": "",
+      "confidence": 0.123,
+      "audio_info": {
+        "duration_ms": 2037.375,
+        "sample_count": 32598,
+        "max_amplitude": 1230.0,
+        "rms_amplitude": 315.49973545564364
+      },
+      "engine": "google"
+    },
+    {
+      "id": 27,
+      "timestamp": "2025-07-21T20:12:39.210011",
+      "text": "",
+      "confidence": 0.1467,
+      "audio_info": {
+        "duration_ms": 2016.0,
+        "sample_count": 32256,
+        "max_amplitude": 1467.0,
+        "rms_amplitude": 318.51152123856735
+      },
+      "engine": "google"
+    },
+    {
+      "id": 28,
+      "timestamp": "2025-07-21T20:12:41.310295",
+      "text": "",
+      "confidence": 0.1416,
+      "audio_info": {
+        "duration_ms": 2017.9375,
+        "sample_count": 32287,
+        "max_amplitude": 1416.0,
+        "rms_amplitude": 317.30451264690475
+      },
+      "engine": "google"
+    },
+    {
+      "id": 29,
+      "timestamp": "2025-07-21T20:12:43.224340",
+      "text": "",
+      "confidence": 0.3859,
+      "audio_info": {
+        "duration_ms": 2014.0625,
+        "sample_count": 32225,
+        "max_amplitude": 3859.0,
+        "rms_amplitude": 363.2887340214028
+      },
+      "engine": "google"
+    },
+    {
+      "id": 30,
+      "timestamp": "2025-07-21T20:12:45.300500",
+      "text": "",
+      "confidence": 0.1457,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 1457.0,
+        "rms_amplitude": 323.64309362203943
+      },
+      "engine": "google"
+    },
+    {
+      "id": 31,
+      "timestamp": "2025-07-21T20:12:47.350005",
+      "text": "",
+      "confidence": 0.1324,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 1324.0,
+        "rms_amplitude": 322.6358692545756
+      },
+      "engine": "google"
+    },
+    {
+      "id": 32,
+      "timestamp": "2025-07-21T20:12:49.398978",
+      "text": "",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 10482.0,
+        "rms_amplitude": 1077.2335062799973
+      },
+      "engine": "google"
+    },
+    {
+      "id": 33,
+      "timestamp": "2025-07-21T20:12:51.270326",
+      "text": "",
+      "confidence": 0.701,
+      "audio_info": {
+        "duration_ms": 2000.4374999999998,
+        "sample_count": 32007,
+        "max_amplitude": 7010.0,
+        "rms_amplitude": 1025.2470279267166
+      },
+      "engine": "google"
+    }
+  ]
+}
