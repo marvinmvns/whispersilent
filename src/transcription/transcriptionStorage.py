@@ -155,11 +155,14 @@ class TranscriptionStorage:
         """Export all transcriptions to a JSON file"""
         if not filename:
             filename = f"transcriptions_export_{int(time.time())}.json"
-            
+        
+        # Get all transcriptions with consistent locking
+        all_transcriptions = self.get_all_transcriptions()
+        
         data = {
             "export_timestamp": time.time(),
-            "total_records": len(self.records),
-            "transcriptions": self.get_all_transcriptions()
+            "total_records": len(all_transcriptions),
+            "transcriptions": all_transcriptions
         }
         
         try:
