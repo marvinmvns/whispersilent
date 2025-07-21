@@ -183,7 +183,7 @@ def run_quick_tests():
         
         from config import Config
         from speechRecognitionService import SpeechRecognitionService
-        from apiService import APIService
+        from apiService import ApiService
         
         print("   ✅ Imports dos módulos principais")
         test_results['imports'] = True

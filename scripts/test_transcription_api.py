@@ -23,11 +23,11 @@ class TranscriptionAPITester:
     def __init__(self):
         """Inicializa o testador"""
         from speechRecognitionService import SpeechRecognitionService
-        from apiService import APIService
+        from apiService import ApiService
         from config import Config
         
         self.speech_service = SpeechRecognitionService()
-        self.api_service = APIService()
+        self.api_service = ApiService()
         self.config = Config
         
     def create_test_audio(self, frequency: float = 440.0, duration: float = 1.0) -> np.ndarray:
