@@ -42,7 +42,11 @@ Sistema completo de transcrição de áudio em tempo real com interface HTTP, ot
 git clone https://github.com/your-username/whispersilent.git
 cd whispersilent
 
-# Execute a instalação completa
+# Execute a instalação completa (método recomendado)
+chmod +x scripts/install_and_test.sh
+./scripts/install_and_test.sh
+
+# OU use o script alternativo
 chmod +x install.sh
 ./install.sh
 ```
@@ -86,7 +90,15 @@ Crie o arquivo `.env` com suas configurações:
 API_ENDPOINT=https://sua-api.com/transcription
 API_KEY=sua_chave_api_opcional
 
-# ===== CONFIGURAÇÃO DO WHISPER =====
+# ===== CONFIGURAÇÃO DE TRANSCRIÇÃO =====
+# Engine de transcrição (padrão: google)
+# Opções: google, google_cloud, sphinx, wit, azure, houndify, ibm, 
+#         whisper_local, whisper_api, faster_whisper, groq, vosk, custom_endpoint
+SPEECH_RECOGNITION_ENGINE=google
+SPEECH_RECOGNITION_LANGUAGE=pt-BR
+SPEECH_RECOGNITION_TIMEOUT=30
+
+# ===== CONFIGURAÇÃO DO WHISPER LOCAL =====
 WHISPER_MODEL_PATH=./models/ggml-base.bin
 WHISPER_LANGUAGE=pt
 
@@ -101,9 +113,53 @@ SILENCE_DURATION_MS=1500
 HTTP_HOST=localhost
 HTTP_PORT=8080
 
+# ===== CONFIGURAÇÃO POR ENGINE =====
+# Google Cloud Speech
+GOOGLE_CLOUD_CREDENTIALS_JSON=path/to/credentials.json
+
+# Wit.ai
+WIT_AI_KEY=your_wit_ai_key
+
+# Azure Speech
+AZURE_SPEECH_KEY=your_azure_speech_key
+
+# Houndify
+HOUNDIFY_CLIENT_ID=your_houndify_client_id
+
+# OpenAI Whisper API
+OPENAI_API_KEY=your_openai_api_key
+
+# Groq
+GROQ_API_KEY=your_groq_api_key
+
+# Vosk (offline)
+VOSK_MODEL_PATH=path/to/vosk-model
+
+# Custom API
+CUSTOM_SPEECH_ENDPOINT=https://your-custom-api.com/transcribe
+
 # ===== PERFORMANCE =====
 ENABLE_GPU=false
 ```
+
+### Engines de Transcrição
+
+#### 🌐 Engines Online (requerem internet)
+- **google** - API gratuita do Google (padrão), sem chave necessária
+- **google_cloud** - Google Cloud Speech API, alta qualidade, requer credenciais
+- **whisper_api** - OpenAI Whisper API, excelente qualidade, requer API key
+- **azure** - Microsoft Azure Speech, requer chave de API
+- **wit** - Facebook Wit.ai, requer chave de API
+- **houndify** - SoundHound Houndify, requer credenciais
+- **ibm** - IBM Speech to Text, requer credenciais
+- **groq** - Groq Whisper API, inferência rápida, requer API key
+- **custom_endpoint** - API personalizada definida pelo usuário
+
+#### 💻 Engines Offline (funcionam sem internet)
+- **sphinx** - CMU Sphinx, qualidade moderada, leve
+- **vosk** - Vosk, boa qualidade, requer download do modelo
+- **whisper_local** - OpenAI Whisper local, melhor qualidade, alto uso de CPU
+- **faster_whisper** - Whisper otimizado, boa qualidade e performance
 
 ### Configurações Flexíveis
 
@@ -205,8 +261,8 @@ Acesse http://localhost:8080/api-docs para documentação interativa Swagger com
                                                 │
                                                 ▼
 ┌─────────────┐    ┌──────────────┐    ┌─────────────┐
-│ API Externa │◀───│  ApiService  │◀───│WhisperService│
-│ (Opcional)  │    │   (HTTP)     │    │(Whisper.cpp)│
+│ API Externa │◀───│  ApiService  │◀───│SpeechRecognition│
+│ (Opcional)  │    │   (HTTP)     │    │Service (12+)│
 └─────────────┘    └──────────────┘    └─────────────┘
                                                 │
                                                 ▼
@@ -220,7 +276,7 @@ Acesse http://localhost:8080/api-docs para documentação interativa Swagger com
 
 1. **AudioCapture** - Interface com ALSA/PortAudio para captura de áudio
 2. **AudioProcessor** - Detecção de voz ativa (VAD) e segmentação
-3. **WhisperService** - Execução do Whisper.cpp para transcrição
+3. **SpeechRecognitionService** - Sistema unificado com 12+ engines de transcrição (Google, Whisper, Vosk, Azure, etc.)
 4. **ApiService** - Cliente HTTP para API externa (opcional)
 5. **TranscriptionPipeline** - Orquestrador principal
 6. **HealthMonitor** - Monitoramento de sistema e métricas
@@ -444,30 +500,39 @@ docker run -d -p 8080:8080 \
 
 ```
 whispersilent/
-├── main.py                   # Entry point básico
-├── mainWithServer.py         # Entry point com HTTP server
-├── install.sh               # Script de instalação automatizada
-├── requirements.txt         # Dependências Python
-├── setup.py                 # Compilação e download de modelos
-├── CLAUDE.md               # Guia para desenvolvimento
-├── api_examples.md         # Exemplos de uso da API
-├── swagger.py              # Documentação OpenAPI
-├── config.py               # Configurações centralizadas
-├── logger.py               # Sistema de logs
-├── audioCapture.py         # Captura de áudio
-├── audioProcessor.py       # Processamento de áudio
-├── whisperService.py       # Interface Whisper.cpp
-├── apiService.py           # Cliente API HTTP
-├── transcriptionPipeline.py # Orquestrador principal
-├── healthMonitor.py        # Monitoramento de saúde
-├── transcriptionStorage.py # Armazenamento em memória
-├── transcriptionFiles.py   # Gerenciamento de arquivos
-├── httpServer.py           # Servidor HTTP RESTful
-├── tests/                  # Suíte de testes
-├── models/                 # Modelos Whisper
-├── transcriptions/         # Dados persistentes
-├── logs/                   # Arquivos de log
-└── temp/                   # Arquivos temporários
+├── src/                        # Código fonte principal
+│   ├── main.py                 # Entry point básico
+│   ├── mainWithServer.py       # Entry point com HTTP server
+│   ├── core/                   # Componentes centrais
+│   │   ├── config.py          # Configurações centralizadas
+│   │   ├── logger.py          # Sistema de logs
+│   │   ├── audioCapture.py    # Captura de áudio
+│   │   └── audioProcessor.py  # Processamento de áudio
+│   ├── transcription/          # Serviços de transcrição
+│   │   ├── speechRecognitionService.py  # 12+ engines unificados
+│   │   ├── googleTranscribeService.py   # Legacy Google service
+│   │   └── transcriptionPipeline.py     # Orquestrador principal
+│   ├── api/                    # Clientes e servidores API
+│   │   ├── apiService.py       # Cliente API HTTP
+│   │   └── httpServer.py       # Servidor HTTP RESTful
+│   ├── storage/                # Armazenamento de dados
+│   │   ├── transcriptionStorage.py     # Armazenamento em memória
+│   │   └── transcriptionFiles.py       # Gerenciamento de arquivos
+│   └── services/               # Serviços auxiliares
+│       └── healthMonitor.py    # Monitoramento de saúde
+├── scripts/                    # Scripts de automação
+│   └── install_and_test.sh    # Instalação completa com testes
+├── tests/                      # Suíte de testes
+├── install.sh                  # Script de instalação alternativo
+├── requirements.txt           # Dependências Python
+├── setup.py                   # Compilação e download de modelos
+├── CLAUDE.md                  # Guia para desenvolvimento
+├── api_examples.md           # Exemplos de uso da API
+├── swagger.py                # Documentação OpenAPI
+├── models/                   # Modelos Whisper e outros
+├── transcriptions/           # Dados persistentes
+├── logs/                     # Arquivos de log
+└── temp/                     # Arquivos temporários
 ```
 
 ### Contribuindo
