@@ -61,6 +61,7 @@ class TranscriptionPipeline:
                     break
                 
                 if audio_chunk is not None and audio_chunk.size > 0:
+                    print(f"🔊 [AUDIO] Chunk detectado: {audio_chunk.size} samples")
                     self.health_monitor.record_chunk_processed()
                     self.processed_audio_queue.put(audio_chunk)
                     self._process_chunk_from_queue() # Process immediately or in another thread
@@ -83,11 +84,15 @@ class TranscriptionPipeline:
             start_time = time.time()
             
             # Transcrever áudio
+            print(f"⚙️  [PROCESSING] Iniciando processamento do chunk...")
             log.info(f'Processando chunk de áudio ({audio_chunk.size} samples)...')
             transcription = self.transcription_service.transcribe(audio_chunk)
             
             if transcription and transcription.strip():
                 processing_time_ms = (time.time() - start_time) * 1000
+                
+                # Debug output for transcription processing
+                print(f"📝 [PIPELINE] Transcrição processada em {processing_time_ms:.2f}ms")
                 log.info(f'Transcrição obtida em {processing_time_ms:.2f}ms: "{transcription}"')
                 
                 # Record successful transcription
@@ -101,6 +106,7 @@ class TranscriptionPipeline:
                     chunk_size=audio_chunk.size,
                     api_sent=False
                 )
+                print(f"💾 [STORAGE] Transcrição armazenada com ID: {record_id}")
                 
                 # Also store in daily file for chronological ordering
                 transcription_record = {
@@ -116,6 +122,7 @@ class TranscriptionPipeline:
                 # Send to API only if enabled
                 if self.api_sending_enabled:
                     try:
+                        print(f"🌐 [API] Enviando transcrição para API...")
                         self.health_monitor.record_api_request_sent()
                         # Determine service type for API metadata
                         if hasattr(self.transcription_service, 'engine'):
@@ -133,13 +140,17 @@ class TranscriptionPipeline:
                         # Mark as sent in storage
                         self.transcription_storage.mark_api_sent(record_id)
                         api_sent = True
+                        print(f"✅ [API] Transcrição enviada com sucesso (ID: {record_id})")
                     except Exception as api_error:
+                        print(f"🚨 [API] Falha ao enviar transcrição: {api_error}")
                         self.health_monitor.record_api_request_failed(str(api_error))
                         log.error(f"Failed to send transcription to API: {api_error}")
                         # Don't raise - continue processing other chunks
                 else:
+                    print(f"⏸️  [API] Envio desabilitado - armazenado apenas localmente")
                     log.debug("API sending disabled - transcription stored locally only")
             else:
+                print(f"🔇 [AUDIO] Silêncio detectado no chunk")
                 log.debug('Nenhuma fala detectada no chunk')
         except Exception as e:
             log.error(f'Erro ao processar chunk: {e}')
@@ -152,6 +163,9 @@ class TranscriptionPipeline:
             return
 
         try:
+            print(f"\n🚀 [PIPELINE] Iniciando sistema de transcrição...")
+            print(f"🎯 [CONFIG] Engine: {getattr(self.transcription_service, 'engine', 'unknown')}")
+            print(f"🔧 [CONFIG] API sending: {'habilitado' if self.api_sending_enabled else 'desabilitado'}")
             log.info('Iniciando pipeline de transcrição...')
             
             # Start audio capture in its own thread if it blocks
@@ -163,15 +177,20 @@ class TranscriptionPipeline:
             self.processing_thread = threading.Thread(target=self._processing_loop, daemon=True)
             self.processing_thread.start()
 
+            print(f"✅ [PIPELINE] Sistema iniciado com sucesso!")
+            print(f"🎤 [STATUS] Aguardando áudio... Fale no microfone!")
+            print(f"{'='*60}")
             log.info('Pipeline de transcrição iniciado com sucesso')
             log.info('Aguardando áudio... Fale no microfone!')
         except Exception as e:
+            print(f"🚨 [ERRO] Falha ao iniciar pipeline: {e}")
             log.error(f'Erro ao iniciar pipeline: {e}')
             self.stop() # Ensure cleanup if start fails
             raise
 
     def stop(self):
         if self.is_running:
+            print(f"\n🛑 [PIPELINE] Parando sistema de transcrição...")
             log.info('Parando pipeline de transcrição...')
             self.is_running = False
             
@@ -191,4 +210,5 @@ class TranscriptionPipeline:
             # Limpar arquivos temporários
             self.transcription_service.cleanup()
             
+            print(f"✅ [PIPELINE] Sistema parado com sucesso")
             log.info('Pipeline de transcrição parado')

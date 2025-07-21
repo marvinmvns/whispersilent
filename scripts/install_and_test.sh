@@ -79,6 +79,7 @@ install_system_dependencies() {
             portaudio19-dev \
             alsa-utils \
             ffmpeg \
+            flac \
             git \
             cmake \
             make \
@@ -92,6 +93,7 @@ install_system_dependencies() {
             portaudio-devel \
             alsa-utils \
             ffmpeg \
+            flac \
             git \
             cmake \
             make \
@@ -102,6 +104,7 @@ install_system_dependencies() {
         brew install \
             portaudio \
             ffmpeg \
+            flac \
             git \
             cmake \
             make
@@ -109,6 +112,7 @@ install_system_dependencies() {
         print_warning "Unknown package manager. Please install the following manually:"
         echo "  - portaudio development libraries"
         echo "  - ffmpeg"
+        echo "  - flac"
         echo "  - git, cmake, make, gcc/g++"
         echo "  - python3 development headers"
     fi

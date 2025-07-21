@@ -302,6 +302,8 @@ class SpeechRecognitionService:
         try:
             start_time = time.time()
             
+            # Debug output to console
+            print(f"\n🎤 [DEBUG] Processando áudio com {self.engine.value} ({audio_chunk.size} samples)...")
             log.debug(f'Processing audio chunk ({audio_chunk.size} samples) with {self.engine.value}...')
             
             # Convert numpy array to AudioData
@@ -313,13 +315,17 @@ class SpeechRecognitionService:
             processing_time_ms = (time.time() - start_time) * 1000
             
             if transcription and transcription.strip():
+                # Prominent console output for successful transcription
+                print(f"✅ [TRANSCRIÇÃO] ({processing_time_ms:.2f}ms): \"{transcription}\"")
                 log.info(f'{self.engine.value} transcription in {processing_time_ms:.2f}ms: "{transcription}"')
                 return transcription.strip()
             else:
+                print(f"❌ [DEBUG] Nenhuma fala detectada ({self.engine.value})")
                 log.debug(f'No speech detected by {self.engine.value}')
                 return ""
                 
         except Exception as e:
+            print(f"🚨 [ERRO] Falha na transcrição ({self.engine.value}): {e}")
             log.error(f'Transcription failed with {self.engine.value}: {e}')
             # Don't raise - return empty string to continue processing
             return ""
