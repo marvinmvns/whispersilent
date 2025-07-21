@@ -7,7 +7,7 @@ class Config:
     AUDIO = {
         "sample_rate": int(os.getenv("SAMPLE_RATE", 16000)),
         "channels": int(os.getenv("CHANNELS", 1)),
-        "device": "plughw:2,0",  # Seeed VoiceCard device
+        "device": os.getenv("AUDIO_DEVICE", "auto"),  # 'auto' para detecção automática, ou índice/nome específico
         "file_type": "wav",
         "encoding": "signed-integer",
         "bit_depth": 16

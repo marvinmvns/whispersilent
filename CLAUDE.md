@@ -20,6 +20,7 @@ The system follows a modular pipeline architecture:
 8. **Logger** (`src/core/logger.py`) - Logging system
 9. **HTTPServer** (`src/api/httpServer.py`) - REST API for monitoring and control
 10. **HealthMonitor** (`src/services/healthMonitor.py`) - System health tracking
+11. **AudioDeviceDetector** (`src/core/audioDeviceDetector.py`) - Automatic audio device detection and selection
 
 ## Key Commands
 
@@ -29,7 +30,7 @@ The system follows a modular pipeline architecture:
 ./scripts/install_and_test.sh
 
 # Choose installation type:
-# 1. Full installation (system deps + Python deps + tests)
+# 1. Full installation (system deps + Python deps + audio detection + tests)
 # 2. Python dependencies only  
 # 3. System dependencies only
 # 4. Test existing installation
@@ -40,6 +41,24 @@ pip install -r requirements.txt
 pip install "SpeechRecognition[pocketsphinx]"  # CMU Sphinx (offline)
 pip install "SpeechRecognition[vosk]"          # Vosk (offline) 
 pip install "SpeechRecognition[whisper-local]" # Local Whisper (offline)
+```
+
+### Audio Device Detection and Configuration
+```bash
+# Automatic audio device detection (recommended)
+python3 scripts/detect_audio_devices.py --auto
+
+# Interactive device selection
+python3 scripts/detect_audio_devices.py --interactive
+
+# List all available audio devices
+python3 scripts/detect_audio_devices.py --list
+
+# Test specific device
+python3 scripts/detect_audio_devices.py --test 2
+
+# Auto-detect and update .env configuration
+python3 scripts/detect_audio_devices.py --auto --update
 ```
 
 ### Running the System
@@ -90,9 +109,15 @@ The system uses environment variables loaded from `.env` file:
 - **WHISPER_MODEL_PATH** - Path to Whisper model (default: ./models/ggml-base.bin)
 - **WHISPER_LANGUAGE** - Language code (default: pt)
 - **SAMPLE_RATE** - Audio sample rate (default: 16000)
+- **CHANNELS** - Audio channels (default: 1)
 - **CHUNK_DURATION_MS** - Audio chunk duration (default: 3000)
 - **SILENCE_THRESHOLD** - Silence detection threshold (default: 500)
 - **SILENCE_DURATION_MS** - Silence duration before processing (default: 1500)
+- **AUDIO_DEVICE** - Audio device configuration (default: auto)
+  - `auto`: Automatic detection of best microphone (recommended)
+  - `<number>`: Specific device index (e.g., 2)
+  - `<name_part>`: Part of device name (e.g., "USB", "seeed")
+  - `plughw:X,Y`: ALSA device specification (e.g., plughw:2,0)
 - **SPEECH_RECOGNITION_ENGINE** - Speech recognition engine to use (default: google)
   - Available engines: google, google_cloud, sphinx, wit, azure, houndify, ibm, whisper_local, whisper_api, faster_whisper, groq, vosk, custom_endpoint
 - **SPEECH_RECOGNITION_LANGUAGE** - Language code for speech recognition (default: pt-BR)

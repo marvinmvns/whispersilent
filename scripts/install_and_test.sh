@@ -255,30 +255,98 @@ build_whisper_cpp() {
     print_success "whisper.cpp built successfully"
 }
 
+# Function to detect audio devices automatically
+detect_audio_devices() {
+    print_status "Detecting audio devices automatically..."
+    
+    cd "$PROJECT_ROOT"
+    source venv/bin/activate
+    
+    # Run audio device detection script
+    if $PYTHON_BIN scripts/detect_audio_devices.py --auto --update; then
+        print_success "Audio device detection completed"
+    else
+        print_warning "Audio device detection had issues, using manual configuration"
+        manual_audio_device_selection
+    fi
+}
+
+# Function for manual audio device selection
+manual_audio_device_selection() {
+    print_status "Manual audio device selection..."
+    
+    cd "$PROJECT_ROOT"
+    source venv/bin/activate
+    
+    # Show available devices and let user choose
+    print_status "Available audio devices:"
+    if command_exists arecord; then
+        arecord -l
+    fi
+    
+    echo ""
+    echo "Audio device configuration options:"
+    echo "1. Use automatic detection (recommended)"
+    echo "2. Specify device by index (e.g., 2)"
+    echo "3. Specify device by name part (e.g., 'USB' or 'seeed')"
+    echo "4. Use default Seeed VoiceCard (plughw:2,0)"
+    echo ""
+    
+    read -p "Choose configuration method (1-4): " device_choice
+    
+    case $device_choice in
+        1)
+            print_status "Configuring automatic device detection..."
+            echo "AUDIO_DEVICE=auto" >> .env
+            ;;
+        2)
+            read -p "Enter device index: " device_index
+            echo "AUDIO_DEVICE=$device_index" >> .env
+            print_success "Configured device index: $device_index"
+            ;;
+        3)
+            read -p "Enter device name part: " device_name
+            echo "AUDIO_DEVICE=$device_name" >> .env
+            print_success "Configured device name: $device_name"
+            ;;
+        4)
+            echo "AUDIO_DEVICE=plughw:2,0" >> .env
+            print_success "Configured Seeed VoiceCard (plughw:2,0)"
+            ;;
+        *)
+            print_warning "Invalid choice, using automatic detection"
+            echo "AUDIO_DEVICE=auto" >> .env
+            ;;
+    esac
+}
+
 # Function to test audio system
 test_audio_system() {
     print_status "Testing audio system..."
     
     # Test if ALSA is working
     if command_exists arecord; then
-        print_status "Testing audio capture devices..."
+        print_status "Testing basic audio system..."
         arecord -l
         
         # Test if the Seeed VoiceCard is available
         if arecord -l | grep -q "seeed"; then
             print_success "Seeed VoiceCard detected"
         else
-            print_warning "Seeed VoiceCard not detected. Check hardware connection."
+            print_warning "Seeed VoiceCard not detected. Will use automatic detection."
         fi
         
-        # Test basic audio capture (3 seconds)
-        print_status "Testing 3-second audio capture..."
-        if arecord -D plughw:2,0 -f S16_LE -r 16000 -c 1 -d 3 test_audio.wav 2>/dev/null; then
-            print_success "Audio capture test successful"
-            rm -f test_audio.wav
+        # Run comprehensive audio device detection
+        cd "$PROJECT_ROOT"
+        source venv/bin/activate
+        
+        print_status "Running comprehensive audio device test..."
+        if $PYTHON_BIN scripts/detect_audio_devices.py --test; then
+            print_success "Audio device test successful"
         else
-            print_warning "Audio capture test failed. Check audio configuration."
+            print_warning "Audio device test had issues. Manual configuration may be needed."
         fi
+        
     else
         print_warning "arecord not found. Audio testing skipped."
     fi
@@ -501,6 +569,7 @@ main() {
             setup_virtual_environment
             install_python_dependencies
             setup_environment_file
+            detect_audio_devices
             test_audio_system
             test_speech_recognition
             run_system_test
