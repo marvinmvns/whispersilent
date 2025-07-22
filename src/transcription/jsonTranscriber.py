@@ -152,13 +152,18 @@ class JsonTranscriber:
             # Transcrever usando o serviço de speech recognition
             text = self.speech_service.transcribe(audio_chunk)
             
-            # Adicionar transcrição (mesmo se vazia para estatísticas)
-            self._add_transcription(text, audio_info)
-            
-            # Salvar imediatamente após cada transcrição
-            self._save_transcriptions()
-            
-            return text if text.strip() else None
+            # Skip processing and JSON generation for empty transcriptions
+            if text and text.strip():
+                # Adicionar transcrição apenas se não estiver vazia
+                self._add_transcription(text, audio_info)
+                
+                # Salvar imediatamente após cada transcrição válida
+                self._save_transcriptions()
+                
+                return text
+            else:
+                # Empty transcription - do not generate JSON
+                return None
             
         except Exception as e:
             log.error(f"Erro ao processar chunk de áudio: {e}")

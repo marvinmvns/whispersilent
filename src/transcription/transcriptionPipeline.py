@@ -102,6 +102,7 @@ class TranscriptionPipeline:
             transcription = self.transcription_service.transcribe(audio_chunk)
             processing_time_ms = (time.time() - start_time) * 1000
             
+            # Skip all processing for empty transcriptions to avoid generating JSON
             if transcription and transcription.strip():
                 words_count = len(transcription.split())
                 chars_count = len(transcription)
@@ -194,9 +195,10 @@ class TranscriptionPipeline:
                 print(f"{'─'*80}")
                 
             else:
+                # Empty transcription - skip all JSON generation and API sending
                 processing_time_ms = (time.time() - start_time) * 1000
-                print(f"🔇 [SILÊNCIO] Nenhuma fala detectada ({processing_time_ms:.0f}ms processamento)")
-                log.debug(f'Nenhuma fala detectada no chunk (processado em {processing_time_ms:.2f}ms)')
+                print(f"🔇 [SILÊNCIO] Nenhuma fala detectada - ignorando ({processing_time_ms:.0f}ms processamento)")
+                log.debug(f'Nenhuma fala detectada no chunk - ignorando para evitar JSON vazio (processado em {processing_time_ms:.2f}ms)')
                 
         except Exception as e:
             processing_time_ms = (time.time() - start_time) * 1000
