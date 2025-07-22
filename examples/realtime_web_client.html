@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhisperSilent Real-time Transcription</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .connection-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .status-connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-connecting {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .transcription-display {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .transcription-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        
+        .transcription-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .transcription-item:last-child {
+            border-bottom: none;
+        }
+        
+        .transcription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .transcription-text {
+            font-size: 16px;
+            line-height: 1.4;
+            color: #333;
+        }
+        
+        .speaker-info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .confidence-badge {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+        
+        .event-log {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .event-item {
+            padding: 8px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .event-transcription { background-color: #e8f5e8; }
+        .event-speaker { background-color: #e3f2fd; }
+        .event-error { background-color: #ffebee; }
+        .event-heartbeat { background-color: #f3e5f5; }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎤 WhisperSilent Real-time Transcription</h1>
+        <p>Live transcription streaming from your WhisperSilent server</p>
+    </div>
+
+    <div class="controls">
+        <div class="control-panel">
+            <h3>🔌 Connection</h3>
+            <div id="connectionStatus" class="connection-status status-disconnected">
+                ❌ Disconnected
+            </div>
+            
+            <label for="serverUrl">Server URL:</label>
+            <input type="text" id="serverUrl" value="ws://localhost:8081" placeholder="ws://localhost:8081">
+            
+            <button id="connectBtn" onclick="toggleConnection()">Connect</button>
+            <button id="pingBtn" onclick="sendPing()" disabled>Send Ping</button>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="clientCount">0</div>
+                    <div class="stat-label">Connected Clients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="transcriptionCount">0</div>
+                    <div class="stat-label">Transcriptions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uptimeDisplay">0s</div>
+                    <div class="stat-label">Server Uptime</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <h3>📡 Subscriptions</h3>
+            <div>
+                <label><input type="checkbox" id="subTranscription" checked> Transcriptions</label><br>
+                <label><input type="checkbox" id="subSpeaker" checked> Speaker Changes</label><br>
+                <label><input type="checkbox" id="subChunk"> Audio Chunks</label><br>
+                <label><input type="checkbox" id="subHeartbeat"> Heartbeat</label><br>
+                <label><input type="checkbox" id="subError" checked> Errors</label>
+            </div>
+            
+            <button onclick="updateSubscriptions()">Update Subscriptions</button>
+            <button onclick="clearTranscriptions()">Clear Display</button>
+            <button onclick="requestBuffer()">Get Recent Events</button>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+        <div>
+            <h3>📝 Live Transcriptions</h3>
+            <div id="transcriptions" class="transcription-display">
+                <div class="transcription-item">
+                    <div class="transcription-text" style="text-align: center; color: #666; font-style: italic;">
+                        Connect to server to see live transcriptions...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <h3>📊 Event Log</h3>
+            <div id="eventLog" class="event-log">
+                <div class="event-item">Waiting for connection...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let websocket = null;
+        let isConnected = false;
+        let clientId = null;
+        let transcriptionCount = 0;
+        let serverUptime = 0;
+        let connectedClients = 0;
+
+        function updateConnectionStatus(status, message) {
+            const statusElement = document.getElementById('connectionStatus');
+            const connectBtn = document.getElementById('connectBtn');
+            const pingBtn = document.getElementById('pingBtn');
+            
+            statusElement.className = `connection-status status-${status}`;
+            statusElement.textContent = message;
+            
+            if (status === 'connected') {
+                connectBtn.textContent = 'Disconnect';
+                pingBtn.disabled = false;
+                isConnected = true;
+            } else {
+                connectBtn.textContent = 'Connect';
+                pingBtn.disabled = true;
+                isConnected = false;
+            }
+        }
+
+        function addEventLog(type, message) {
+            const eventLog = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const eventItem = document.createElement('div');
+            eventItem.className = `event-item event-${type}`;
+            eventItem.textContent = `[${timestamp}] ${message}`;
+            
+            eventLog.insertBefore(eventItem, eventLog.firstChild);
+            
+            // Keep only last 50 events
+            while (eventLog.children.length > 50) {
+                eventLog.removeChild(eventLog.lastChild);
+            }
+        }
+
+        function addTranscription(text, speaker = null, confidence = null, timestamp = null) {
+            const container = document.getElementById('transcriptions');
+            const timeStr = timestamp ? new Date(timestamp * 1000).toLocaleTimeString() : new Date().toLocaleTimeString();
+            
+            // Clear placeholder if it exists
+            if (container.children.length === 1 && container.firstChild.textContent.includes('Connect to server')) {
+                container.innerHTML = '';
+            }
+            
+            const item = document.createElement('div');
+            item.className = 'transcription-item';
+            
+            const header = document.createElement('div');
+            header.className = 'transcription-header';
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.textContent = timeStr;
+            header.appendChild(timeSpan);
+            
+            const badgeContainer = document.createElement('div');
+            
+            if (speaker) {
+                const speakerBadge = document.createElement('span');
+                speakerBadge.className = 'speaker-info';
+                speakerBadge.textContent = speaker;
+                badgeContainer.appendChild(speakerBadge);
+            }
+            
+            if (confidence !== null) {
+                const confidenceBadge = document.createElement('span');
+                confidenceBadge.className = 'confidence-badge';
+                confidenceBadge.textContent = `${(confidence * 100).toFixed(0)}%`;
+                badgeContainer.appendChild(confidenceBadge);
+            }
+            
+            header.appendChild(badgeContainer);
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = 'transcription-text';
+            textDiv.textContent = text;
+            
+            item.appendChild(header);
+            item.appendChild(textDiv);
+            
+            container.insertBefore(item, container.firstChild);
+            
+            // Keep only last 20 transcriptions
+            while (container.children.length > 20) {
+                container.removeChild(container.lastChild);
+            }
+            
+            transcriptionCount++;
+            document.getElementById('transcriptionCount').textContent = transcriptionCount;
+        }
+
+        function updateStats(clients, uptime) {
+            if (clients !== undefined) {
+                connectedClients = clients;
+                document.getElementById('clientCount').textContent = clients;
+            }
+            
+            if (uptime !== undefined) {
+                serverUptime = uptime;
+                const hours = Math.floor(uptime / 3600);
+                const minutes = Math.floor((uptime % 3600) / 60);
+                const seconds = Math.floor(uptime % 60);
+                
+                let uptimeStr = '';
+                if (hours > 0) uptimeStr += `${hours}h `;
+                if (minutes > 0) uptimeStr += `${minutes}m `;
+                uptimeStr += `${seconds}s`;
+                
+                document.getElementById('uptimeDisplay').textContent = uptimeStr;
+            }
+        }
+
+        async function toggleConnection() {
+            if (isConnected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
+
+        async function connect() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            
+            updateConnectionStatus('connecting', '🔄 Connecting...');
+            addEventLog('connection', `Connecting to ${serverUrl}`);
+            
+            try {
+                websocket = new WebSocket(serverUrl);
+                
+                websocket.onopen = function(event) {
+                    updateConnectionStatus('connected', '✅ Connected');
+                    addEventLog('connection', 'Connected successfully');
+                };
+                
+                websocket.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleMessage(data);
+                    } catch (e) {
+                        addEventLog('error', `Invalid JSON: ${e.message}`);
+                    }
+                };
+                
+                websocket.onclose = function(event) {
+                    updateConnectionStatus('disconnected', '❌ Disconnected');
+                    addEventLog('connection', `Disconnected: ${event.reason || 'Unknown reason'}`);
+                    websocket = null;
+                };
+                
+                websocket.onerror = function(error) {
+                    updateConnectionStatus('disconnected', '❌ Connection Error');
+                    addEventLog('error', `Connection error: ${error}`);
+                };
+                
+            } catch (error) {
+                updateConnectionStatus('disconnected', '❌ Failed to Connect');
+                addEventLog('error', `Failed to connect: ${error.message}`);
+            }
+        }
+
+        function disconnect() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            updateConnectionStatus('disconnected', '❌ Disconnected');
+        }
+
+        function handleMessage(data) {
+            const event = data.event || data.event_type;
+            
+            switch (event) {
+                case 'connected':
+                    clientId = data.client_id;
+                    addEventLog('connection', `Connected as ${clientId}`);
+                    addEventLog('info', `Buffer contains ${data.buffer_size} events`);
+                    updateSubscriptions(); // Set initial subscriptions
+                    break;
+                    
+                case 'transcription':
+                    const text = data.data?.text || '';
+                    const metadata = data.data?.metadata || {};
+                    const speaker = metadata.speaker_id;
+                    const confidence = metadata.confidence;
+                    
+                    addTranscription(text, speaker, confidence, data.timestamp);
+                    addEventLog('transcription', `New transcription: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
+                    break;
+                    
+                case 'speaker_change':
+                    const speakerId = data.data?.speaker_id;
+                    const speakerConfidence = data.data?.confidence;
+                    addEventLog('speaker', `Speaker change: ${speakerId} (${(speakerConfidence * 100).toFixed(0)}%)`);
+                    break;
+                    
+                case 'chunk_processed':
+                    const chunkData = data.data || {};
+                    addEventLog('chunk', `Audio chunk: ${chunkData.size || 0} samples`);
+                    break;
+                    
+                case 'heartbeat':
+                    const clients = data.connected_clients;
+                    const uptime = data.server_uptime;
+                    updateStats(clients, uptime);
+                    addEventLog('heartbeat', `Heartbeat - ${clients} clients, ${uptime?.toFixed(0)}s uptime`);
+                    break;
+                    
+                case 'error':
+                    const errorMsg = data.data?.message || data.message || 'Unknown error';
+                    addEventLog('error', errorMsg);
+                    break;
+                    
+                case 'subscription_updated':
+                    const subs = data.subscriptions || [];
+                    addEventLog('info', `Subscriptions: ${subs.join(', ')}`);
+                    break;
+                    
+                case 'pong':
+                    addEventLog('heartbeat', 'Pong received');
+                    break;
+                    
+                default:
+                    addEventLog('info', `Unknown event: ${event}`);
+            }
+        }
+
+        function sendMessage(message) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify(message));
+                return true;
+            }
+            return false;
+        }
+
+        function sendPing() {
+            if (sendMessage({ action: 'ping', timestamp: Date.now() / 1000 })) {
+                addEventLog('heartbeat', 'Ping sent');
+            }
+        }
+
+        function updateSubscriptions() {
+            const events = [];
+            
+            if (document.getElementById('subTranscription').checked) events.push('transcription');
+            if (document.getElementById('subSpeaker').checked) events.push('speaker_change');
+            if (document.getElementById('subChunk').checked) events.push('chunk_processed');
+            if (document.getElementById('subHeartbeat').checked) events.push('heartbeat');
+            if (document.getElementById('subError').checked) events.push('error');
+            
+            if (sendMessage({ action: 'subscribe', events: events })) {
+                addEventLog('info', `Subscribed to: ${events.join(', ')}`);
+            }
+        }
+
+        function clearTranscriptions() {
+            document.getElementById('transcriptions').innerHTML = '<div class="transcription-item"><div class="transcription-text" style="text-align: center; color: #666; font-style: italic;">Transcriptions cleared...</div></div>';
+            transcriptionCount = 0;
+            document.getElementById('transcriptionCount').textContent = '0';
+        }
+
+        function requestBuffer() {
+            if (sendMessage({ action: 'get_buffer' })) {
+                addEventLog('info', 'Requested recent events');
+            }
+        }
+
+        // Auto-connect on page load if server URL is set
+        window.addEventListener('load', function() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            if (serverUrl && serverUrl !== 'ws://localhost:8081') {
+                // Only auto-connect if URL was customized
+                // connect();
+            }
+        });
+    </script>
+</body>
+</html>

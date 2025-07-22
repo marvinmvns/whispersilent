@@ -150,7 +150,7 @@ class TranscriptionPipeline:
                 if self.api_sending_enabled:
                     try:
                         api_endpoint = os.getenv('API_ENDPOINT', 'não configurado')
-                        print(f"🌐 [API] Enviando para: {api_endpoint}")
+                        log.debug(f"🌐 [API] Enviando para: {api_endpoint}")
                         
                         self.health_monitor.record_api_request_sent()
                         # Determine service type for API metadata
@@ -176,7 +176,7 @@ class TranscriptionPipeline:
                         transcription_record["api_sent"] = True
                         api_sent = True
                         
-                        print(f"✅ [API] ✅ Enviado com sucesso (ID: {record_id})")
+                        log.debug(f"✅ [API] ✅ Enviado com sucesso (ID: {record_id})")
                         log.info(f"API request successful for transcription {record_id}")
                         
                     except Exception as api_error:

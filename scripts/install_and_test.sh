@@ -140,6 +140,68 @@ setup_virtual_environment() {
     pip install --upgrade pip setuptools wheel
 }
 
+# Function to download Whisper models
+download_whisper_models() {
+    print_status "Downloading Whisper models..."
+    
+    cd "$PROJECT_ROOT"
+    mkdir -p models
+    
+    # Download base model (default)
+    if [ ! -f "models/ggml-base.bin" ]; then
+        print_status "Downloading Whisper base model (142MB)..."
+        wget --progress=bar:force https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin -O models/ggml-base.bin
+        print_success "Base model downloaded"
+    else
+        print_status "Base model already exists"
+    fi
+    
+    # Ask if user wants additional models
+    echo ""
+    echo "Additional Whisper models available:"
+    echo "1. Tiny (39MB) - Fastest, basic quality"
+    echo "2. Small (244MB) - Good balance of speed and quality"
+    echo "3. Medium (769MB) - Better quality, slower"
+    echo "4. Large (1.5GB) - Best quality, slowest"
+    echo "5. Skip additional models"
+    echo ""
+    
+    read -p "Download additional models? (1-5): " model_choice
+    
+    case $model_choice in
+        1)
+            if [ ! -f "models/ggml-tiny.bin" ]; then
+                wget --progress=bar:force https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin -O models/ggml-tiny.bin
+                print_success "Tiny model downloaded"
+            fi
+            ;;
+        2)
+            if [ ! -f "models/ggml-small.bin" ]; then
+                wget --progress=bar:force https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin -O models/ggml-small.bin
+                print_success "Small model downloaded"
+            fi
+            ;;
+        3)
+            if [ ! -f "models/ggml-medium.bin" ]; then
+                wget --progress=bar:force https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin -O models/ggml-medium.bin
+                print_success "Medium model downloaded"
+            fi
+            ;;
+        4)
+            if [ ! -f "models/ggml-large-v3.bin" ]; then
+                wget --progress=bar:force https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin -O models/ggml-large-v3.bin
+                print_success "Large model downloaded"
+            fi
+            ;;
+        5)
+            print_status "Skipping additional models"
+            ;;
+        *)
+            print_status "Invalid choice, skipping additional models"
+            ;;
+    esac
+}
+
 # Function to install Python dependencies
 install_python_dependencies() {
     print_status "Installing Python dependencies..."
@@ -149,6 +211,10 @@ install_python_dependencies() {
     
     # Install basic requirements
     pip install -r requirements.txt
+    
+    # Install WebSocket dependencies for real-time API
+    print_status "Installing WebSocket dependencies for real-time API..."
+    pip install websockets
     
     # Install optional speech recognition engines based on user choice
     echo ""
@@ -213,6 +279,49 @@ install_python_dependencies() {
     esac
     
     print_success "Python dependencies installed"
+    
+    # Ask about speaker identification features
+    echo ""
+    echo "Speaker Identification Features (optional):"
+    echo "1. Simple Energy (basic, no dependencies)"
+    echo "2. PyAnnote (neural diarization, requires HuggingFace)"
+    echo "3. Resemblyzer (speaker embeddings)"
+    echo "4. SpeechBrain (advanced recognition)"
+    echo "5. Install all speaker identification engines"
+    echo "6. Skip speaker identification features"
+    echo ""
+    
+    read -p "Install speaker identification features? (1-6): " speaker_choice
+    
+    case $speaker_choice in
+        1)
+            print_status "Simple Energy method enabled (no additional dependencies)"
+            ;;
+        2)
+            print_status "Installing PyAnnote for neural speaker diarization..."
+            pip install pyannote.audio
+            print_warning "PyAnnote requires HuggingFace token. Set HUGGINGFACE_TOKEN in .env"
+            ;;
+        3)
+            print_status "Installing Resemblyzer for speaker embeddings..."
+            pip install resemblyzer
+            ;;
+        4)
+            print_status "Installing SpeechBrain for advanced speaker recognition..."
+            pip install speechbrain
+            ;;
+        5)
+            print_status "Installing all speaker identification engines..."
+            pip install pyannote.audio resemblyzer speechbrain
+            print_warning "PyAnnote requires HuggingFace token. Set HUGGINGFACE_TOKEN in .env"
+            ;;
+        6)
+            print_status "Skipping speaker identification features"
+            ;;
+        *)
+            print_warning "Invalid choice, skipping speaker identification features"
+            ;;
+    esac
 }
 
 # Function to download Vosk model
@@ -240,6 +349,18 @@ build_whisper_cpp() {
     
     cd "$PROJECT_ROOT"
     
+    # Ask if user wants to build whisper.cpp
+    echo ""
+    echo "Whisper.cpp is optional and only needed for legacy support."
+    echo "The system uses Python SpeechRecognition library by default."
+    echo ""
+    read -p "Build whisper.cpp? (y/N): " build_whisper
+    
+    if [[ ! $build_whisper =~ ^[Yy]$ ]]; then
+        print_status "Skipping whisper.cpp build"
+        return 0
+    fi
+    
     if [ ! -d "whisper.cpp" ]; then
         git clone https://github.com/ggerganov/whisper.cpp.git
     fi
@@ -250,11 +371,6 @@ build_whisper_cpp() {
     # Build with optimizations for Raspberry Pi 2W
     make clean
     make -j$(nproc)
-    
-    # Download base model if it doesn't exist
-    if [ ! -f "models/ggml-base.bin" ]; then
-        bash ./models/download-ggml-model.sh base
-    fi
     
     print_success "whisper.cpp built successfully"
 }
@@ -560,12 +676,21 @@ show_final_instructions() {
     echo "   python src/mainWithServer.py"
     echo ""
     echo "6. Access the web interface:"
-    echo "   http://localhost:8000"
+    echo "   HTTP API: http://localhost:8080"
+    echo "   Swagger docs: http://localhost:8080/api-docs"
+    echo "   Real-time client: Open examples/realtime_web_client.html"
     echo ""
     echo "Available test scripts:"
     echo "   - scripts/test_microphone_basic.py (quick microphone test)"
     echo "   - scripts/test_transcription_api.py (transcription engines test)"
     echo "   - scripts/test_complete_system.py (full system test)"
+    echo "   - scripts/validate_installation.py (installation validator)"
+    echo ""
+    echo "New features available:"
+    echo "   - Speaker identification (set SPEAKER_IDENTIFICATION_ENABLED=true)"
+    echo "   - Real-time WebSocket API (set REALTIME_API_ENABLED=true)"
+    echo "   - Hourly text aggregation (automatic with 5min silence detection)"
+    echo "   - Enhanced health monitoring with CPU/memory metrics"
     echo ""
     echo "For help and documentation, see:"
     echo "   - CLAUDE.md (project documentation)"
@@ -596,6 +721,7 @@ main() {
             install_system_dependencies
             setup_virtual_environment
             install_python_dependencies
+            download_whisper_models
             setup_environment_file
             detect_audio_devices
             test_audio_system
@@ -608,6 +734,7 @@ main() {
             check_python_version
             setup_virtual_environment
             install_python_dependencies
+            download_whisper_models
             setup_environment_file
             test_speech_recognition
             run_system_test

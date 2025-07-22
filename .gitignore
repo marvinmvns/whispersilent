@@ -1,46 +1,81 @@
-# Dependências
-node_modules/
-
-# Logs
-logs/
-*.log
-
-# Arquivos temporários
-temp/
-*.wav
-
-# Modelos Whisper (grandes)
-models/*.bin
-
-# Variáveis de ambiente
-.env
-.env.local
-.env.production
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
+# Logs
+logs/
+*.log
+src/core/logs/
+
+# Temporary files
+temp/
+*.tmp
+*.temp
+
+# Audio models (large files - download via script)
+models/*.bin
+models/*.ggml
+models/*.pt
+models/*.pth
+
+# Transcription output
+transcriptions/
+transcricoes_*.json
+transcriptions_*.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# System files
 .DS_Store
 Thumbs.db
 
-# Build
-dist/
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Documentation build
+docs/_build/
+site/
+
+# Distribution / packaging
 build/
+dist/
+*.egg-info/
+.eggs/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.venv/
-venv/
-env/
+# Audio test files
+*.wav
+*.mp3
+*.flac
+*.m4a
 
-# Binários e executáveis
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Node.js (if any)
+node_modules/
+
+# Binaries and executables (should be installed via script)
 *.exe
 *.out
 *.app
@@ -49,18 +84,14 @@ env/
 *.a
 *.dll
 *.dylib
-whisper.cpp
+whisper.cpp/
 whisper
 main
 
-# Scripts de ambiente e instalação
-install.sh
-setup.sh
-*.install
-*.setup
-
-# Arquivos de configuração sensíveis
+# Sensitive configuration files
 config.ini
 settings.conf
 *.secret
 *.key
+*.pem
+*.crt

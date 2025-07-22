@@ -1,10 +1,24 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Get log level from environment (default: INFO)
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+log_level_mapping = {
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+    "CRITICAL": logging.CRITICAL
+}
 
 # Configure logger
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(log_level_mapping.get(log_level, logging.INFO))
 
 # Create logs directory if it doesn't exist
 logs_dir = os.path.join(os.path.dirname(__file__), 'logs')

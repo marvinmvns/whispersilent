@@ -37,6 +37,45 @@ curl http://localhost:8080/health
 curl http://localhost:8080/health/detailed
 ```
 
+**Resposta de Exemplo:**
+```json
+{
+  "status": "healthy",
+  "timestamp": 1704067200.0,
+  "uptime_seconds": 3600,
+  "system_metrics": {
+    "cpu_percent": 25.5,
+    "memory_percent": 65.2,
+    "memory_used_mb": 8245.3,
+    "memory_total_mb": 16384.0,
+    "disk_usage_percent": 42.1,
+    "process_threads": 8,
+    "process_memory_mb": 245.7
+  },
+  "transcription_metrics": {
+    "total_chunks_processed": 150,
+    "successful_transcriptions": 145,
+    "failed_transcriptions": 5,
+    "api_requests_sent": 140,
+    "api_requests_failed": 2,
+    "average_processing_time_ms": 1450.2,
+    "last_transcription_time": 1704067190.0,
+    "last_api_call_time": 1704067185.0,
+    "uptime_seconds": 3600
+  },
+  "component_status": {
+    "audio_capture_active": true,
+    "audio_processor_active": true,
+    "whisper_service_active": true,
+    "api_service_active": true,
+    "pipeline_running": true,
+    "whisper_model_loaded": true
+  },
+  "recent_errors": [],
+  "performance_warnings": []
+}
+```
+
 ### Status do Pipeline
 ```bash
 curl http://localhost:8080/status
@@ -67,6 +106,80 @@ curl "http://localhost:8080/transcriptions?recent_minutes=60"
 
 # Transcrições por período específico
 curl "http://localhost:8080/transcriptions?start_time=1704060000&end_time=1704067200"
+```
+
+### Agregação Horária de Transcrições
+
+#### Status da Agregação Atual
+```bash
+curl http://localhost:8080/aggregation/status
+```
+
+**Resposta de Exemplo:**
+```json
+{
+  "enabled": true,
+  "running": true,
+  "current_hour_start": 1704067200.0,
+  "current_hour_formatted": "2024-01-01 12:00",
+  "current_transcription_count": 15,
+  "current_partial_text": "Esta é uma conversa em andamento que será agregada...",
+  "current_partial_length": 250,
+  "last_transcription_time": 1704067800.0,
+  "minutes_since_last": 2.5,
+  "total_aggregated_hours": 24,
+  "min_silence_gap_minutes": 5
+}
+```
+
+#### Listar Textos Agregados
+```bash
+# Todos os textos agregados
+curl http://localhost:8080/aggregation/texts
+
+# Últimos 10 agregados
+curl "http://localhost:8080/aggregation/texts?limit=10"
+```
+
+#### Obter Texto Agregado Específico por Hora
+```bash
+curl "http://localhost:8080/aggregation/texts/1704067200"
+```
+
+#### Forçar Finalização da Agregação Atual
+```bash
+curl -X POST http://localhost:8080/aggregation/finalize
+```
+
+#### Habilitar/Desabilitar Agregação
+```bash
+# Desabilitar agregação
+curl -X POST "http://localhost:8080/aggregation/toggle?enabled=false"
+
+# Habilitar agregação  
+curl -X POST "http://localhost:8080/aggregation/toggle?enabled=true"
+```
+
+#### Estatísticas de Agregação
+```bash
+curl http://localhost:8080/aggregation/statistics
+```
+
+**Resposta de Exemplo:**
+```json
+{
+  "total_aggregated_hours": 48,
+  "total_transcriptions_aggregated": 1250,
+  "total_characters_aggregated": 125000,
+  "sent_to_api_count": 46,
+  "pending_api_send": 2,
+  "average_transcriptions_per_hour": 26.0,
+  "average_characters_per_hour": 2604.2,
+  "current_period_transcriptions": 8,
+  "current_period_characters": 450,
+  "enabled": true,
+  "running": true
+}
 ```
 
 **Resposta de Exemplo:**
@@ -170,6 +283,293 @@ curl -X POST http://localhost:8080/transcriptions/send-unsent
   "sent_count": 5,
   "failed_count": 0,
   "timestamp": 1704067200.0
+}
+```
+
+### Enviar Textos Agregados Pendentes
+```bash
+curl -X POST http://localhost:8080/aggregation/send-unsent
+```
+
+## 3. API de Transcrição em Tempo Real (WebSocket)
+
+### Configuração WebSocket
+
+A API em tempo real utiliza WebSockets para streaming de transcrições ao vivo.
+
+```bash
+# .env - Habilitar API em tempo real
+REALTIME_API_ENABLED=true
+REALTIME_WEBSOCKET_PORT=8081
+REALTIME_MAX_CONNECTIONS=50
+REALTIME_BUFFER_SIZE=100
+REALTIME_HEARTBEAT_INTERVAL=30
+```
+
+### Conectando via WebSocket
+
+```javascript
+// JavaScript/Browser
+const websocket = new WebSocket('ws://localhost:8081');
+
+websocket.onopen = function(event) {
+    console.log('Conectado ao WhisperSilent');
+};
+
+websocket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    console.log('Evento recebido:', data);
+};
+```
+
+```python
+# Python com websockets
+import asyncio
+import websockets
+import json
+
+async def listen_transcriptions():
+    uri = "ws://localhost:8081"
+    async with websockets.connect(uri) as websocket:
+        async for message in websocket:
+            data = json.loads(message)
+            print(f"Evento: {data}")
+
+asyncio.run(listen_transcriptions())
+```
+
+### Eventos Disponíveis
+
+#### 1. Evento de Conexão
+```json
+{
+  "event": "connected",
+  "client_id": "client_1704067200_12345",
+  "timestamp": 1704067200.0,
+  "available_events": ["transcription", "speaker_change", "chunk_processed", "error", "heartbeat"],
+  "buffer_size": 25
+}
+```
+
+#### 2. Nova Transcrição
+```json
+{
+  "event_type": "transcription",
+  "timestamp": 1704067200.0,
+  "data": {
+    "text": "Esta é uma nova transcrição em tempo real",
+    "metadata": {
+      "processing_time_ms": 1250.5,
+      "confidence": 0.95,
+      "speaker_id": "SPEAKER_01",
+      "chunk_size": 48000
+    },
+    "client_count": 3
+  }
+}
+```
+
+#### 3. Mudança de Falante
+```json
+{
+  "event_type": "speaker_change",
+  "timestamp": 1704067205.0,
+  "data": {
+    "speaker_id": "SPEAKER_02",
+    "confidence": 0.87,
+    "metadata": {
+      "previous_speaker": "SPEAKER_01",
+      "transition_time": 1704067204.5
+    }
+  }
+}
+```
+
+#### 4. Chunk de Áudio Processado
+```json
+{
+  "event_type": "chunk_processed",
+  "timestamp": 1704067210.0,
+  "data": {
+    "size": 48000,
+    "duration_seconds": 3.0,
+    "sample_rate": 16000,
+    "processing_time_ms": 850.2
+  }
+}
+```
+
+#### 5. Heartbeat
+```json
+{
+  "event": "heartbeat",
+  "timestamp": 1704067215.0,
+  "server_uptime": 3600,
+  "connected_clients": 5
+}
+```
+
+#### 6. Erro
+```json
+{
+  "event_type": "error",
+  "timestamp": 1704067220.0,
+  "data": {
+    "message": "Falha na transcrição do chunk de áudio",
+    "error_type": "transcription_error"
+  }
+}
+```
+
+### Comandos do Cliente
+
+#### Subscrever a Eventos
+```json
+{
+  "action": "subscribe",
+  "events": ["transcription", "speaker_change"]
+}
+```
+
+#### Cancelar Subscrição
+```json
+{
+  "action": "unsubscribe",
+  "events": ["chunk_processed"]
+}
+```
+
+#### Ping/Heartbeat
+```json
+{
+  "action": "ping",
+  "timestamp": 1704067200.0
+}
+```
+
+#### Solicitar Eventos Recentes
+```json
+{
+  "action": "get_buffer"
+}
+```
+
+#### Definir Metadados do Cliente
+```json
+{
+  "action": "set_metadata",
+  "metadata": {
+    "user_id": "user123",
+    "session_name": "Meeting Room A",
+    "language_preference": "pt-BR"
+  }
+}
+```
+
+### Cliente Python Completo
+
+```python
+#!/usr/bin/env python3
+import asyncio
+import json
+import websockets
+from datetime import datetime
+
+class WhisperSilentClient:
+    def __init__(self, server_url="ws://localhost:8081"):
+        self.server_url = server_url
+        self.websocket = None
+        
+    async def connect(self):
+        try:
+            self.websocket = await websockets.connect(self.server_url)
+            print(f"Conectado a {self.server_url}")
+            
+            # Subscrever aos eventos desejados
+            await self.subscribe(["transcription", "speaker_change"])
+            
+            # Escutar mensagens
+            async for message in self.websocket:
+                await self.handle_message(message)
+                
+        except Exception as e:
+            print(f"Erro de conexão: {e}")
+    
+    async def subscribe(self, events):
+        message = {
+            "action": "subscribe",
+            "events": events
+        }
+        await self.websocket.send(json.dumps(message))
+    
+    async def handle_message(self, message):
+        try:
+            data = json.loads(message)
+            event = data.get('event', data.get('event_type'))
+            timestamp = datetime.fromtimestamp(data.get('timestamp', 0))
+            
+            if event == 'transcription':
+                text = data['data']['text']
+                speaker = data['data']['metadata'].get('speaker_id', 'Unknown')
+                print(f"[{timestamp:%H:%M:%S}] {speaker}: {text}")
+                
+            elif event == 'speaker_change':
+                speaker = data['data']['speaker_id']
+                confidence = data['data']['confidence']
+                print(f"[{timestamp:%H:%M:%S}] 🎭 Novo falante: {speaker} ({confidence:.1%})")
+                
+            elif event == 'connected':
+                client_id = data['client_id']
+                print(f"[{timestamp:%H:%M:%S}] ✅ Conectado como {client_id}")
+                
+        except Exception as e:
+            print(f"Erro processando mensagem: {e}")
+
+# Uso
+async def main():
+    client = WhisperSilentClient()
+    await client.connect()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Cliente Web (HTML/JavaScript)
+
+Veja o arquivo `examples/realtime_web_client.html` para uma interface web completa com:
+- Conexão WebSocket interativa
+- Subscrição seletiva de eventos
+- Exibição em tempo real de transcrições
+- Log de eventos
+- Estatísticas de conexão
+
+### Status da API em Tempo Real
+
+```bash
+# Verificar status via HTTP
+curl http://localhost:8080/realtime/status
+```
+
+**Resposta:**
+```json
+{
+  "enabled": true,
+  "running": true,
+  "port": 8081,
+  "connected_clients": 3,
+  "max_connections": 50,
+  "buffer_size": 45,
+  "max_buffer_size": 100,
+  "heartbeat_interval": 30,
+  "clients": [
+    {
+      "client_id": "client_1704067200_12345",
+      "connected_at": 1704067200.0,
+      "last_heartbeat": 1704067250.0,
+      "subscriptions": ["transcription", "speaker_change"],
+      "metadata": {"user_id": "user123"}
+    }
+  ]
 }
 ```
 

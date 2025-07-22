@@ -44,11 +44,11 @@ class ApiService:
 
         # Enhanced API request logging
         data_size = len(str(data))
-        print(f"🌐 [API REQUEST] Preparando envio...")
-        print(f"    📍 URL: {self.base_url}")
-        print(f"    📝 Texto: \"{transcription[:50]}{'...' if len(transcription) > 50 else ''}\"")
-        print(f"    📊 Payload: {data_size} bytes")
-        print(f"    🔑 Auth: {'Sim' if self.api_key else 'Não'}")
+        log.debug(f"🌐 [API REQUEST] Preparando envio...")
+        log.debug(f"    📍 URL: {self.base_url}")
+        log.debug(f"    📝 Texto: \"{transcription[:50]}{'...' if len(transcription) > 50 else ''}\"")
+        log.debug(f"    📊 Payload: {data_size} bytes")
+        log.debug(f"    🔑 Auth: {'Sim' if self.api_key else 'Não'}")
 
         for attempt in range(self.retry_attempts):
             try:
@@ -56,7 +56,7 @@ class ApiService:
                 url = self.base_url # Assuming the endpoint is the full URL
                 self._log_request('POST', url, data)
                 
-                print(f"🚀 [API] Tentativa {attempt + 1}/{self.retry_attempts} - Enviando...")
+                log.debug(f"🚀 [API] Tentativa {attempt + 1}/{self.retry_attempts} - Enviando...")
                 
                 response = requests.post(url, json=data, headers=self.headers, timeout=self.timeout)
                 response_time_ms = (time.time() - start_time) * 1000
@@ -65,11 +65,11 @@ class ApiService:
                 
                 # Enhanced success logging
                 response_data = response.json() if response.content else {}
-                print(f"✅ [API SUCCESS] Resposta recebida em {response_time_ms:.0f}ms")
-                print(f"    📊 Status: {response.status_code}")
-                print(f"    📦 Response: {len(response.content)} bytes")
+                log.debug(f"✅ [API SUCCESS] Resposta recebida em {response_time_ms:.0f}ms")
+                log.debug(f"    📊 Status: {response.status_code}")
+                log.debug(f"    📦 Response: {len(response.content)} bytes")
                 if response_data:
-                    print(f"    📋 Data: {str(response_data)[:100]}{'...' if len(str(response_data)) > 100 else ''}")
+                    log.debug(f"    📋 Data: {str(response_data)[:100]}{'...' if len(str(response_data)) > 100 else ''}")
                 
                 self._log_response(response.status_code, response_data)
                 log.info(f'Transcrição enviada com sucesso em {response_time_ms:.2f}ms')
@@ -82,21 +82,21 @@ class ApiService:
                 
                 if hasattr(e, 'response') and e.response is not None:
                     error_message = f"{e.response.status_code} - {e.response.text}"
-                    print(f"🚨 [API ERROR] {e.response.status_code} após {response_time_ms:.0f}ms")
-                    print(f"    📄 Response: {e.response.text[:200]}{'...' if len(e.response.text) > 200 else ''}")
+                    log.debug(f"🚨 [API ERROR] {e.response.status_code} após {response_time_ms:.0f}ms")
+                    log.debug(f"    📄 Response: {e.response.text[:200]}{'...' if len(e.response.text) > 200 else ''}")
                 else:
-                    print(f"🚨 [API ERROR] {type(e).__name__} após {response_time_ms:.0f}ms")
-                    print(f"    💬 Erro: {str(e)[:200]}{'...' if len(str(e)) > 200 else ''}")
+                    log.debug(f"🚨 [API ERROR] {type(e).__name__} após {response_time_ms:.0f}ms")
+                    log.debug(f"    💬 Erro: {str(e)[:200]}{'...' if len(str(e)) > 200 else ''}")
                 
                 self._log_error(f"Erro ao enviar transcrição (tentativa {attempt + 1}/{self.retry_attempts}): {error_message}")
                 
                 if not is_last_attempt:
                     delay = self.retry_delay * (attempt + 1) / 1000 # Convert ms to seconds
-                    print(f"⏳ [API RETRY] Aguardando {delay:.1f}s para próxima tentativa...")
+                    log.debug(f"⏳ [API RETRY] Aguardando {delay:.1f}s para próxima tentativa...")
                     log.info(f"Aguardando {delay}s antes da próxima tentativa...")
                     time.sleep(delay)
                 else:
-                    print(f"❌ [API FAILED] Todas as {self.retry_attempts} tentativas falharam")
+                    log.warning(f"❌ [API FAILED] Todas as {self.retry_attempts} tentativas falharam")
                     raise # Re-raise the last exception
 
 if __name__ == '__main__':

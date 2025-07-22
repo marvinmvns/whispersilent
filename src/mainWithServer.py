@@ -27,24 +27,24 @@ http_server = None
 
 def check_configuration():
     """Verifies that essential configurations are present."""
-    log.info("🔍 Checking configuration...")
+    log.debug("🔍 Checking configuration...")
     
     api_endpoint = os.getenv('API_ENDPOINT')
     if not api_endpoint:
         log.warning("⚠️  No API_ENDPOINT configured - API sending will be disabled")
-        log.info("💡 Set API_ENDPOINT in .env file to enable API functionality")
+        log.debug("💡 Set API_ENDPOINT in .env file to enable API functionality")
     else:
-        log.info(f"✅ API endpoint configured: {api_endpoint[:50]}...")
+        log.debug(f"✅ API endpoint configured: {api_endpoint[:50]}...")
         api_key = os.getenv('API_KEY')
         if not api_key:
             log.warning("⚠️  No API_KEY configured - API requests may fail if authentication is required")
-            log.info("💡 Set API_KEY in .env file if your API requires authentication")
+            log.debug("💡 Set API_KEY in .env file if your API requires authentication")
         else:
-            log.info("✅ API key configured")
+            log.debug("✅ API key configured")
 
     # Check speech recognition engine configuration
     engine = Config.SPEECH_RECOGNITION.get("engine", "google")
-    log.info(f"🎯 Speech recognition engine: {engine}")
+    log.debug(f"🎯 Speech recognition engine: {engine}")
     
     if engine == "vosk":
         model_path = Config.SPEECH_RECOGNITION.get("vosk_model_path")
@@ -70,11 +70,11 @@ def check_configuration():
         required_var = online_engines[engine]
         if not os.getenv(required_var):
             log.warning(f"⚠️  Engine '{engine}' requires {required_var} to be set in .env file")
-            log.info(f"💡 Falling back to 'google' engine if available")
+            log.debug(f"💡 Falling back to 'google' engine if available")
         else:
-            log.info(f"✅ Engine credentials configured for {engine}")
+            log.debug(f"✅ Engine credentials configured for {engine}")
     
-    log.info("✅ Configuration check completed")
+    log.debug("✅ Configuration check completed")
     return True
 
 # Servidor HTTP simplificado para JsonTranscriber
@@ -214,18 +214,18 @@ def main():
             log.error('❌ Configuration check failed')
             sys.exit(1)
         
-        # Get HTTP server configuration
-        http_host = os.getenv('HTTP_HOST', '0.0.0.0')  # Allow external connections
-        http_port = int(os.getenv('HTTP_PORT', 8080))
+        # Get HTTP server configuration from Config
+        http_host = Config.HTTP_SERVER["host"]
+        http_port = Config.HTTP_SERVER["port"]
         
         log.info(f'🌐 Starting HTTP server on {http_host}:{http_port}...')
         # Create a simplified server that works with JsonTranscriber
         http_server = SimpleTranscriptionHTTPServer(json_transcriber, http_host, http_port)
         http_server.start()
         
-        log.info(f'✅ HTTP server initialized')
-        log.info(f'🎯 Engine: {json_transcriber.speech_service.engine.value}')
-        log.info(f'🌍 Language: {json_transcriber.speech_service.language}')
+        log.debug(f'✅ HTTP server initialized')
+        log.debug(f'🎯 Engine: {json_transcriber.speech_service.engine.value}')
+        log.debug(f'🌍 Language: {json_transcriber.speech_service.language}')
         
         log.info('🚀 Starting transcription system...')
         json_transcriber.start()
@@ -238,11 +238,11 @@ def main():
         log.info('⚠️  Use CTRL+C to stop')
         log.info('='*60)
         
-        log.info('📋 Available HTTP endpoints:')
-        log.info(f'   Health Check: http://{http_host}:{http_port}/health')
-        log.info(f'   Transcriptions: http://{http_host}:{http_port}/transcriptions')
-        log.info(f'   Stats: http://{http_host}:{http_port}/stats')
-        log.info('')
+        log.debug('📋 Available HTTP endpoints:')
+        log.debug(f'   Health Check: http://{http_host}:{http_port}/health')
+        log.debug(f'   Transcriptions: http://{http_host}:{http_port}/transcriptions')
+        log.debug(f'   Stats: http://{http_host}:{http_port}/stats')
+        log.debug('')
         
         # Keep the main thread alive while services are running
         start_time = time.time()
@@ -255,7 +255,7 @@ def main():
             if current_time - last_status > 30:  # Every 30 seconds
                 uptime = current_time - start_time
                 stats = json_transcriber.get_stats()
-                log.info(f'📊 [{uptime:.0f}s] System running - Transcrições: {stats.get("successful_transcriptions", 0)}')
+                log.debug(f'📊 [{uptime:.0f}s] System running - Transcrições: {stats.get("successful_transcriptions", 0)}')
                 last_status = current_time
             
             time.sleep(0.5)

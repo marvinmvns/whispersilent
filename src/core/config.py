@@ -106,6 +106,36 @@ class Config:
     }
 
     HTTP_SERVER = {
-        "host": os.getenv("HTTP_SERVER_HOST", "localhost"),
-        "port": int(os.getenv("HTTP_SERVER_PORT", 8080))
+        "host": os.getenv("HTTP_HOST", "localhost"),
+        "port": int(os.getenv("HTTP_PORT", 8080))
+    }
+
+    LOGGING = {
+        "level": os.getenv("LOG_LEVEL", "INFO").upper(),
+        "log_file": os.getenv("LOG_FILE", "logs/whisper_silent.log")
+    }
+
+    SPEAKER_IDENTIFICATION = {
+        "enabled": os.getenv("SPEAKER_IDENTIFICATION_ENABLED", "false").lower() == "true",
+        "method": os.getenv("SPEAKER_IDENTIFICATION_METHOD", "disabled"),  # disabled, simple_energy, pyannote, resemblyzer, speechbrain
+        "confidence_threshold": float(os.getenv("SPEAKER_CONFIDENCE_THRESHOLD", "0.7")),
+        "min_segment_duration": float(os.getenv("SPEAKER_MIN_SEGMENT_DURATION", "2.0")),
+        "max_speakers": int(os.getenv("SPEAKER_MAX_SPEAKERS", "10")),
+        "energy_threshold": float(os.getenv("SPEAKER_ENERGY_THRESHOLD", "0.01")),
+        "smoothing_window": int(os.getenv("SPEAKER_SMOOTHING_WINDOW", "5")),
+        
+        # PyAnnote configuration
+        "pyannote_model_path": os.getenv("PYANNOTE_MODEL_PATH"),
+        "hf_token": os.getenv("HUGGINGFACE_TOKEN"),
+        
+        # SpeechBrain configuration
+        "speechbrain_model": os.getenv("SPEECHBRAIN_MODEL", "speechbrain/spkrec-ecapa-voxceleb")
+    }
+
+    REALTIME_API = {
+        "enabled": os.getenv("REALTIME_API_ENABLED", "false").lower() == "true",
+        "websocket_port": int(os.getenv("REALTIME_WEBSOCKET_PORT", 8081)),
+        "max_connections": int(os.getenv("REALTIME_MAX_CONNECTIONS", 50)),
+        "buffer_size": int(os.getenv("REALTIME_BUFFER_SIZE", 100)),
+        "heartbeat_interval": int(os.getenv("REALTIME_HEARTBEAT_INTERVAL", 30))
     }

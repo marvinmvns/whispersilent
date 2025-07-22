@@ -364,6 +364,194 @@ def get_swagger_spec():
                     }
                 }
             }
+        },
+        "/aggregation/status": {
+            "get": {
+                "summary": "Get aggregation status",
+                "description": "Returns current hourly aggregation status and progress",
+                "tags": ["Aggregation"],
+                "responses": {
+                    "200": {
+                        "description": "Aggregation status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AggregationStatus"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/aggregation/texts": {
+            "get": {
+                "summary": "List aggregated texts",
+                "description": "Retrieve completed hourly aggregated texts",
+                "tags": ["Aggregation"],
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Maximum number of aggregated texts to return",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of aggregated texts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AggregatedText"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/aggregation/texts/{hour_timestamp}": {
+            "get": {
+                "summary": "Get aggregated text by hour",
+                "description": "Retrieve aggregated text for a specific hour",
+                "tags": ["Aggregation"],
+                "parameters": [
+                    {
+                        "name": "hour_timestamp",
+                        "in": "path",
+                        "required": true,
+                        "description": "Hour timestamp (Unix timestamp)",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aggregated text",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AggregatedText"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aggregated text not found"
+                    }
+                }
+            }
+        },
+        "/aggregation/finalize": {
+            "post": {
+                "summary": "Force finalize current aggregation",
+                "description": "Manually trigger finalization of the current hour's aggregation",
+                "tags": ["Aggregation"],
+                "responses": {
+                    "200": {
+                        "description": "Aggregation finalized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AggregatedText"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No current transcriptions to finalize"
+                    }
+                }
+            }
+        },
+        "/aggregation/toggle": {
+            "post": {
+                "summary": "Toggle aggregation",
+                "description": "Enable or disable hourly aggregation",
+                "tags": ["Aggregation"],
+                "parameters": [
+                    {
+                        "name": "enabled",
+                        "in": "query",
+                        "required": true,
+                        "description": "Whether to enable or disable aggregation",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aggregation toggled",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {"type": "string"},
+                                        "enabled": {"type": "boolean"},
+                                        "timestamp": {"type": "number"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/aggregation/statistics": {
+            "get": {
+                "summary": "Get aggregation statistics",
+                "description": "Returns statistical information about hourly aggregations",
+                "tags": ["Aggregation"],
+                "responses": {
+                    "200": {
+                        "description": "Aggregation statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AggregationStatistics"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/aggregation/send-unsent": {
+            "post": {
+                "summary": "Send unsent aggregated texts",
+                "description": "Manually send all aggregated texts that haven't been sent to the API",
+                "tags": ["Aggregation"],
+                "responses": {
+                    "200": {
+                        "description": "Send operation completed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {"type": "string"},
+                                        "sent_count": {"type": "integer"},
+                                        "failed_count": {"type": "integer"},
+                                        "timestamp": {"type": "number"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -504,6 +692,73 @@ def get_swagger_spec():
                     "pipeline_running": {"type": "boolean"},
                     "timestamp": {"type": "number"}
                 }
+            },
+            "AggregationStatus": {
+                "type": "object",
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                    "running": {"type": "boolean"},
+                    "current_hour_start": {"type": "number"},
+                    "current_hour_formatted": {"type": "string"},
+                    "current_transcription_count": {"type": "integer"},
+                    "current_partial_text": {"type": "string"},
+                    "current_partial_length": {"type": "integer"},
+                    "last_transcription_time": {"type": "number"},
+                    "last_transcription_formatted": {"type": "string"},
+                    "minutes_since_last": {"type": "number"},
+                    "total_aggregated_hours": {"type": "integer"},
+                    "min_silence_gap_minutes": {"type": "integer"}
+                }
+            },
+            "AggregatedText": {
+                "type": "object",
+                "properties": {
+                    "hour_timestamp": {"type": "number"},
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"},
+                    "full_text": {"type": "string"},
+                    "transcription_count": {"type": "integer"},
+                    "silence_gaps": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "start_time": {"type": "number"},
+                                "end_time": {"type": "number"},
+                                "duration_seconds": {"type": "number"},
+                                "duration_minutes": {"type": "number"}
+                            }
+                        }
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "properties": {
+                            "finalization_reason": {"type": "string"},
+                            "total_duration_minutes": {"type": "number"},
+                            "average_gap_seconds": {"type": "number"},
+                            "word_count": {"type": "integer"},
+                            "character_count": {"type": "integer"}
+                        }
+                    },
+                    "sent_to_api": {"type": "boolean"},
+                    "created_at": {"type": "number"}
+                }
+            },
+            "AggregationStatistics": {
+                "type": "object",
+                "properties": {
+                    "total_aggregated_hours": {"type": "integer"},
+                    "total_transcriptions_aggregated": {"type": "integer"},
+                    "total_characters_aggregated": {"type": "integer"},
+                    "sent_to_api_count": {"type": "integer"},
+                    "pending_api_send": {"type": "integer"},
+                    "average_transcriptions_per_hour": {"type": "number"},
+                    "average_characters_per_hour": {"type": "number"},
+                    "current_period_transcriptions": {"type": "integer"},
+                    "current_period_characters": {"type": "integer"},
+                    "enabled": {"type": "boolean"},
+                    "running": {"type": "boolean"}
+                }
             }
         }
     },
@@ -531,6 +786,10 @@ def get_swagger_spec():
         {
             "name": "API Control",
             "description": "External API integration control"
+        },
+        {
+            "name": "Aggregation",
+            "description": "Hourly text aggregation management"
         }
     ]
 }
@@ -564,6 +823,26 @@ def get_swagger_html():
     <script src="https://unpkg.com/swagger-ui-dist@3.52.5/swagger-ui-standalone-preset.js"></script>
     <script>
         window.onload = function() {{
+            // Create custom server configuration UI
+            const serverConfigDiv = document.createElement('div');
+            serverConfigDiv.style.cssText = 'margin: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;';
+            serverConfigDiv.innerHTML = `
+                <h3 style="margin-top: 0; color: #495057;">🌐 Server Configuration</h3>
+                <div style="margin-bottom: 10px;">
+                    <label for="server-url" style="display: inline-block; width: 120px; font-weight: bold; color: #495057;">Server URL:</label>
+                    <input type="text" id="server-url" value="${{window.location.origin}}" 
+                           style="width: 300px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-family: monospace;" 
+                           placeholder="http://your-ip:8080" />
+                    <button onclick="updateServerUrl()" 
+                            style="margin-left: 10px; padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Update
+                    </button>
+                </div>
+                <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
+                    💡 <strong>Tip:</strong> Change this to point to your WhisperSilent server (e.g., http://192.168.1.100:8080)
+                </div>
+            `;
+            
             const ui = SwaggerUIBundle({{
                 url: '/api-docs.json',
                 dom_id: '#swagger-ui',
@@ -575,8 +854,85 @@ def get_swagger_html():
                 plugins: [
                     SwaggerUIBundle.plugins.DownloadUrl
                 ],
-                layout: "StandaloneLayout"
+                layout: "StandaloneLayout",
+                onComplete: function() {{
+                    // Insert server config at the top
+                    const swaggerContainer = document.querySelector('#swagger-ui');
+                    if (swaggerContainer) {{
+                        swaggerContainer.insertBefore(serverConfigDiv, swaggerContainer.firstChild);
+                    }}
+                }}
             }});
+            
+            // Function to update server URL
+            window.updateServerUrl = function() {{
+                const newServerUrl = document.getElementById('server-url').value.trim();
+                if (!newServerUrl) {{
+                    alert('Please enter a valid server URL');
+                    return;
+                }}
+                
+                // Validate URL format
+                try {{
+                    new URL(newServerUrl);
+                }} catch (e) {{
+                    alert('Please enter a valid URL (e.g., http://192.168.1.100:8080)');
+                    return;
+                }}
+                
+                // Fetch the current spec and update servers
+                fetch('/api-docs.json')
+                    .then(response => response.json())
+                    .then(spec => {{
+                        spec.servers = [
+                            {{
+                                url: newServerUrl,
+                                description: "Custom Server"
+                            }},
+                            {{
+                                url: window.location.origin,
+                                description: "Current Server"
+                            }},
+                            {{
+                                url: "http://localhost:8080",
+                                description: "Local Development"
+                            }}
+                        ];
+                        
+                        // Recreate SwaggerUI with updated spec
+                        document.querySelector('#swagger-ui').innerHTML = '';
+                        SwaggerUIBundle({{
+                            spec: spec,
+                            dom_id: '#swagger-ui',
+                            deepLinking: true,
+                            presets: [
+                                SwaggerUIBundle.presets.apis,
+                                SwaggerUIStandalonePreset
+                            ],
+                            plugins: [
+                                SwaggerUIBundle.plugins.DownloadUrl
+                            ],
+                            layout: "StandaloneLayout",
+                            onComplete: function() {{
+                                const swaggerContainer = document.querySelector('#swagger-ui');
+                                if (swaggerContainer && !document.getElementById('server-url')) {{
+                                    swaggerContainer.insertBefore(serverConfigDiv, swaggerContainer.firstChild);
+                                }}
+                            }}
+                        }});
+                        
+                        // Show success message
+                        const successMsg = document.createElement('div');
+                        successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 10px 15px; border-radius: 4px; z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;';
+                        successMsg.textContent = '✅ Server URL updated successfully!';
+                        document.body.appendChild(successMsg);
+                        setTimeout(() => document.body.removeChild(successMsg), 3000);
+                    }})
+                    .catch(error => {{
+                        console.error('Error updating server:', error);
+                        alert('Error updating server URL: ' + error.message);
+                    }});
+            }};
         }};
     </script>
 </body>
