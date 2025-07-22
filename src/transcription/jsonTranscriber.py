@@ -343,3 +343,82 @@ class JsonTranscriber:
         
         self._save_transcriptions()
         log.info("Transcrições limpas")
+
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get aggregated statistics about transcriptions"""
+        with self.lock:
+            if not self.transcriptions:
+                return {
+                    "total_records": 0,
+                    "sent_to_api": 0,
+                    "average_processing_time_ms": 0,
+                    "oldest_timestamp": None,
+                    "newest_timestamp": None,
+                    "total_characters": 0,
+                    "success_rate": 0
+                }
+            
+            total_chars = sum(len(t.get('text', '')) for t in self.transcriptions)
+            timestamps = [datetime.fromisoformat(t['timestamp'].replace('Z', '')) for t in self.transcriptions if 'timestamp' in t]
+            
+            return {
+                "total_records": len(self.transcriptions),
+                "sent_to_api": 0,  # JsonTranscriber doesn't track API sending
+                "average_processing_time_ms": 0,  # Not tracked in JsonTranscriber
+                "oldest_timestamp": min(timestamps).isoformat() if timestamps else None,
+                "newest_timestamp": max(timestamps).isoformat() if timestamps else None,
+                "total_characters": total_chars,
+                "success_rate": round((self.stats["successful_transcriptions"] / max(self.stats["total_audio_chunks"], 1)) * 100, 2)
+            }
+
+    def get_summary(self, hours: int = 24) -> Dict[str, Any]:
+        """Get summary of transcriptions for the last N hours"""
+        import datetime as dt
+        cutoff_time = dt.datetime.now() - dt.timedelta(hours=hours)
+        
+        with self.lock:
+            recent_records = []
+            for t in self.transcriptions:
+                if 'timestamp' in t:
+                    try:
+                        t_time = dt.datetime.fromisoformat(t['timestamp'].replace('Z', ''))
+                        if t_time >= cutoff_time:
+                            recent_records.append(t)
+                    except:
+                        continue
+            
+            if not recent_records:
+                return {
+                    "period_hours": hours,
+                    "total_transcriptions": 0,
+                    "total_characters": 0,
+                    "average_processing_time_ms": 0,
+                    "api_success_rate": 0,
+                    "transcriptions_per_hour": 0
+                }
+            
+            total_chars = sum(len(r.get('text', '')) for r in recent_records)
+            
+            return {
+                "period_hours": hours,
+                "total_transcriptions": len(recent_records),
+                "total_characters": total_chars,
+                "average_processing_time_ms": 0,  # Not tracked
+                "api_success_rate": 0,  # Not applicable for JsonTranscriber
+                "transcriptions_per_hour": round(len(recent_records) / hours, 2)
+            }
+
+    def search_transcriptions(self, query: str, case_sensitive: bool = False) -> List[Dict[str, Any]]:
+        """Search transcriptions by text content"""
+        with self.lock:
+            results = []
+            search_query = query if case_sensitive else query.lower()
+            
+            for t in self.transcriptions:
+                text = t.get('text', '')
+                search_text = text if case_sensitive else text.lower()
+                
+                if search_query in search_text:
+                    results.append(t)
+                    
+            return results

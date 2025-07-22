@@ -2,6 +2,7 @@ import os
 import sys
 import signal
 import time
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Add module paths with higher priority
@@ -114,7 +115,9 @@ class SimpleTranscriptionHandler(BaseHTTPRequestHandler):
         
     def do_GET(self):
         """Handle GET requests"""
-        path = urlparse(self.path).path
+        parsed_url = urlparse(self.path)
+        path = parsed_url.path
+        query_params = parse_qs(parsed_url.query)
         
         if path == '/health':
             self._send_json_response({
@@ -123,20 +126,95 @@ class SimpleTranscriptionHandler(BaseHTTPRequestHandler):
                 "engine": self.transcriber.speech_service.engine.value,
                 "timestamp": time.time()
             })
+        elif path == '/health/detailed':
+            stats = self.transcriber.get_stats()
+            self._send_json_response({
+                "status": "healthy",
+                "transcriber_running": self.transcriber.is_running,
+                "engine": self.transcriber.speech_service.engine.value,
+                "timestamp": time.time(),
+                "stats": stats
+            })
         elif path == '/stats':
             stats = self.transcriber.get_stats()
             self._send_json_response(stats)
+        elif path == '/status':
+            self._send_json_response({
+                "pipeline_running": self.transcriber.is_running,
+                "api_sending_enabled": False,  # JsonTranscriber doesn't send to API
+                "transcription_service": "JsonTranscriber",
+                "engine": self.transcriber.speech_service.engine.value,
+                "uptime_seconds": time.time() - (datetime.fromisoformat(self.transcriber.stats['session_start']).timestamp() if self.transcriber.stats.get('session_start') else time.time()),
+                "timestamp": time.time()
+            })
         elif path == '/transcriptions':
             # Parse query parameters
-            query = parse_qs(urlparse(self.path).query)
-            limit = int(query.get('limit', [10])[0])
+            limit = None
+            if 'limit' in query_params:
+                try:
+                    limit = int(query_params['limit'][0])
+                except (ValueError, IndexError):
+                    self._send_json_response({"error": "Invalid limit parameter"}, 400)
+                    return
             
-            transcriptions = self.transcriber.get_transcriptions(limit=limit)
+            if 'recent_minutes' in query_params:
+                try:
+                    minutes = int(query_params['recent_minutes'][0])
+                    # Get transcriptions from last N minutes
+                    import datetime as dt
+                    cutoff_time = dt.datetime.now() - dt.timedelta(minutes=minutes)
+                    recent_transcriptions = []
+                    for t in self.transcriber.transcriptions:
+                        if 'timestamp' in t:
+                            try:
+                                t_time = dt.datetime.fromisoformat(t['timestamp'].replace('Z', ''))
+                                if t_time >= cutoff_time:
+                                    recent_transcriptions.append(t)
+                            except:
+                                continue
+                    transcriptions = recent_transcriptions[-limit:] if limit else recent_transcriptions
+                except (ValueError, IndexError):
+                    self._send_json_response({"error": "Invalid recent_minutes parameter"}, 400)
+                    return
+            else:
+                transcriptions = self.transcriber.get_transcriptions(limit=limit)
+            
             self._send_json_response({
                 "transcriptions": transcriptions,
                 "count": len(transcriptions),
                 "total": len(self.transcriber.transcriptions)
             })
+        elif path == '/transcriptions/search':
+            if 'q' not in query_params:
+                self._send_json_response({"error": "Missing search query parameter 'q'"}, 400)
+                return
+            
+            query = query_params['q'][0]
+            case_sensitive = query_params.get('case_sensitive', ['false'])[0].lower() == 'true'
+            
+            results = self.transcriber.search_transcriptions(query, case_sensitive)
+            
+            self._send_json_response({
+                "query": query,
+                "case_sensitive": case_sensitive,
+                "results": results,
+                "total_matches": len(results),
+                "timestamp": time.time()
+            })
+        elif path == '/transcriptions/statistics':
+            stats = self.transcriber.get_statistics()
+            self._send_json_response(stats)
+        elif path == '/transcriptions/summary':
+            hours = 24  # default
+            if 'hours' in query_params:
+                try:
+                    hours = int(query_params['hours'][0])
+                except (ValueError, IndexError):
+                    self._send_json_response({"error": "Invalid hours parameter"}, 400)
+                    return
+            
+            summary = self.transcriber.get_summary(hours)
+            self._send_json_response(summary)
         else:
             self._send_json_response({"error": "Not found"}, 404)
 
