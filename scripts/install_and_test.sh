@@ -324,23 +324,81 @@ install_python_dependencies() {
     esac
 }
 
-# Function to download Vosk model
+# Function to setup Vosk model using automated installer
 download_vosk_model() {
-    print_status "Downloading Vosk Portuguese model..."
+    print_status "Setting up Vosk Portuguese model..."
     
     cd "$PROJECT_ROOT"
+    
+    # Use the automated Vosk setup script
+    if $PYTHON_BIN scripts/setup_vosk_model.py --auto; then
+        print_success "Vosk model setup completed automatically"
+        
+        # Check if .env was updated correctly
+        if grep -q "VOSK_MODEL_PATH=" .env 2>/dev/null; then
+            vosk_path=$(grep "VOSK_MODEL_PATH=" .env | cut -d'=' -f2)
+            print_success "VOSK_MODEL_PATH configured: $vosk_path"
+        else
+            print_warning "VOSK_MODEL_PATH not found in .env file"
+        fi
+    else
+        print_warning "Automated Vosk setup failed, falling back to manual download"
+        download_vosk_model_manual
+    fi
+}
+
+# Manual Vosk download (fallback method)
+download_vosk_model_manual() {
+    print_status "Manual Vosk model download..."
+    
     mkdir -p models/vosk
     cd models/vosk
     
-    # Download small Portuguese model (about 50MB)
+    # Download small Portuguese model (about 39MB)
     if [ ! -d "vosk-model-small-pt-0.3" ]; then
-        wget https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip
+        if command_exists wget; then
+            wget https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip
+        elif command_exists curl; then
+            curl -O https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip
+        else
+            print_error "Neither wget nor curl found. Cannot download Vosk model."
+            cd "$PROJECT_ROOT"
+            return 1
+        fi
+        
         unzip vosk-model-small-pt-0.3.zip
         rm vosk-model-small-pt-0.3.zip
-        print_success "Vosk model downloaded"
+        
+        # Update .env manually
+        model_path="$PROJECT_ROOT/models/vosk/vosk-model-small-pt-0.3"
+        if [ ! -f "$PROJECT_ROOT/.env" ]; then
+            touch "$PROJECT_ROOT/.env"
+        fi
+        
+        # Check if VOSK_MODEL_PATH already exists in .env
+        if grep -q "VOSK_MODEL_PATH=" "$PROJECT_ROOT/.env"; then
+            # Update existing line
+            sed -i "s|VOSK_MODEL_PATH=.*|VOSK_MODEL_PATH=$model_path|" "$PROJECT_ROOT/.env"
+        else
+            # Add new line
+            echo "" >> "$PROJECT_ROOT/.env"
+            echo "# Vosk offline transcription model" >> "$PROJECT_ROOT/.env"
+            echo "VOSK_MODEL_PATH=$model_path" >> "$PROJECT_ROOT/.env"
+        fi
+        
+        print_success "Vosk model downloaded and configured manually"
     else
         print_status "Vosk model already exists"
+        
+        # Make sure .env is configured even if model exists
+        model_path="$PROJECT_ROOT/models/vosk/vosk-model-small-pt-0.3"
+        if ! grep -q "VOSK_MODEL_PATH=" "$PROJECT_ROOT/.env" 2>/dev/null; then
+            echo "VOSK_MODEL_PATH=$model_path" >> "$PROJECT_ROOT/.env"
+            print_success "VOSK_MODEL_PATH added to .env"
+        fi
     fi
+    
+    cd "$PROJECT_ROOT"
 }
 
 # Function to clone and build whisper.cpp (optional for legacy support)
@@ -569,19 +627,50 @@ setup_environment_file() {
     if [ ! -f ".env" ]; then
         cp .env.example .env
         print_success ".env file created from example"
+        
+        # Configure automatic fallback system
+        configure_fallback_system
+        
         print_warning "Please edit .env file to configure your API keys and settings"
         
-        # Set default to Google (free) engine
-        sed -i 's/SPEECH_RECOGNITION_ENGINE=google/SPEECH_RECOGNITION_ENGINE=google/' .env
-        
         echo ""
-        echo "Quick setup recommendations:"
-        echo "1. For Raspberry Pi 2W: Use 'google' engine (free, requires internet)"
-        echo "2. For offline use: Install and use 'sphinx' or 'vosk' engine"
-        echo "3. For best quality: Use 'whisper_local' engine (requires more CPU)"
+        echo "Automatic Fallback System Configured:"
+        echo "✅ Primary engine: Google (free, requires internet)"
+        echo "✅ Fallback engine: Vosk (offline, automatic when internet fails)"
+        echo "✅ Auto-switching: Enabled"
+        echo ""
+        echo "Additional recommendations:"
+        echo "1. For Raspberry Pi 2W: Current setup is optimal"
+        echo "2. For best offline quality: Install Whisper Local engine"
+        echo "3. For cloud APIs: Add your API keys to .env"
         echo ""
     else
         print_status ".env file already exists"
+        
+        # Check if fallback is already configured
+        if ! grep -q "SPEECH_RECOGNITION_ENABLE_FALLBACK" .env; then
+            print_status "Adding fallback configuration to existing .env..."
+            configure_fallback_system
+        fi
+    fi
+}
+
+# Function to configure automatic fallback system in .env
+configure_fallback_system() {
+    print_status "Configuring automatic fallback system..."
+    
+    # Ensure fallback configuration exists in .env
+    if ! grep -q "SPEECH_RECOGNITION_ENABLE_FALLBACK" .env; then
+        echo "" >> .env
+        echo "# Automatic Fallback Configuration" >> .env
+        echo "SPEECH_RECOGNITION_ENABLE_FALLBACK=true" >> .env
+        echo "SPEECH_RECOGNITION_OFFLINE_FALLBACK=vosk" >> .env
+        echo "SPEECH_RECOGNITION_AUTO_SWITCH=true" >> .env
+        echo "CONNECTIVITY_CHECK_INTERVAL=30" >> .env
+        
+        print_success "Fallback system configured in .env"
+    else
+        print_status "Fallback configuration already exists in .env"
     fi
 }
 

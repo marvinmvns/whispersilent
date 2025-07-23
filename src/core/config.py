@@ -54,6 +54,12 @@ class Config:
         "timeout": int(os.getenv("SPEECH_RECOGNITION_TIMEOUT", "30")),
         "phrase_timeout": int(os.getenv("SPEECH_RECOGNITION_PHRASE_TIMEOUT", "5")),
         
+        # Fallback configuration
+        "enable_fallback": os.getenv("SPEECH_RECOGNITION_ENABLE_FALLBACK", "true").lower() == "true",
+        "offline_fallback_engine": os.getenv("SPEECH_RECOGNITION_OFFLINE_FALLBACK", "vosk"),
+        "auto_switch_on_connection_loss": os.getenv("SPEECH_RECOGNITION_AUTO_SWITCH", "true").lower() == "true",
+        "connectivity_check_interval": int(os.getenv("CONNECTIVITY_CHECK_INTERVAL", "30")),
+        
         # Google Cloud Speech API
         "google_cloud_credentials": os.getenv("GOOGLE_CLOUD_CREDENTIALS_JSON"),
         "google_cloud_project_id": os.getenv("GOOGLE_CLOUD_PROJECT_ID"),

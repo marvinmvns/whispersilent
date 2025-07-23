@@ -41,6 +41,9 @@ pip install -r requirements.txt
 pip install "SpeechRecognition[pocketsphinx]"  # CMU Sphinx (offline)
 pip install "SpeechRecognition[vosk]"          # Vosk (offline) 
 pip install "SpeechRecognition[whisper-local]" # Local Whisper (offline)
+
+# Setup offline fallback model (Vosk) - automatically included in install_and_test.sh
+python3 scripts/setup_vosk_model.py --auto
 ```
 
 ### Audio Device Detection and Configuration
@@ -139,6 +142,10 @@ The system uses environment variables loaded from `.env` file:
   - Available engines: google, google_cloud, sphinx, wit, azure, houndify, ibm, whisper_local, whisper_api, faster_whisper, groq, vosk, custom_endpoint
 - **SPEECH_RECOGNITION_LANGUAGE** - Language code for speech recognition (default: pt-BR)
 - **SPEECH_RECOGNITION_TIMEOUT** - Recognition timeout in seconds (default: 30)
+- **SPEECH_RECOGNITION_ENABLE_FALLBACK** - Enable automatic fallback to offline engines (default: true)
+- **SPEECH_RECOGNITION_OFFLINE_FALLBACK** - Offline engine to use when no internet (default: vosk)
+- **SPEECH_RECOGNITION_AUTO_SWITCH** - Automatically switch engines based on connectivity (default: true)
+- **CONNECTIVITY_CHECK_INTERVAL** - Seconds between connectivity checks (default: 30)
 
 ### Engine-Specific Configuration
 - **GOOGLE_CLOUD_CREDENTIALS_JSON** - Google Cloud credentials for google_cloud engine
@@ -158,11 +165,20 @@ The system uses environment variables loaded from `.env` file:
 
 ## Important Implementation Details
 
+### Automatic Fallback System
+The system includes intelligent fallback capabilities that automatically switch between online and offline transcription engines based on internet connectivity:
+
+- **ConnectivityDetector** (`src/core/connectivity.py`) - Monitors internet connectivity
+- **FallbackTranscriptionService** (`src/transcription/fallbackTranscriptionService.py`) - Manages automatic engine switching
+- **Automatic Switching**: When internet is lost, automatically switches to offline engines (Vosk, Sphinx, Whisper Local)
+- **Recovery**: When connectivity is restored, switches back to online engines
+- **Feature Toggle**: Can be disabled via `SPEECH_RECOGNITION_ENABLE_FALLBACK=false`
+
 ### Audio Pipeline Flow
 1. Continuous audio capture via ALSA
 2. Real-time silence detection and voice activity detection
 3. Audio segmentation into processable chunks
-4. Transcription via configurable speech recognition engine:
+4. Transcription via configurable speech recognition engine with fallback support:
    - **Google** (default): Free Google Speech Recognition API, requires internet
    - **Google Cloud**: Paid Google Cloud Speech API, high quality, requires credentials
    - **Sphinx**: Offline CMU Sphinx engine, moderate quality

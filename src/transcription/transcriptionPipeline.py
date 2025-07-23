@@ -13,6 +13,7 @@ from audioCapture import AudioCapture
 from audioProcessor import AudioProcessor
 from speechRecognitionService import SpeechRecognitionService
 from googleTranscribeService import GoogleTranscribeService
+from fallbackTranscriptionService import FallbackTranscriptionService
 from apiService import ApiService
 from config import Config
 from healthMonitor import HealthMonitor
@@ -29,12 +30,18 @@ class TranscriptionPipeline:
         self.audio_processor = AudioProcessor(self.audio_queue) # AudioProcessor consumes from audio_queue
         
         # Choose transcription service based on configuration
-        # Priority: SpeechRecognition > Google Transcribe > fallback
+        # Priority: FallbackTranscriptionService (with auto-fallback) > SpeechRecognition > Google Transcribe
         speech_engine = Config.SPEECH_RECOGNITION.get("engine", "").lower()
+        enable_fallback = Config.SPEECH_RECOGNITION.get("enable_fallback", True)
         
-        if speech_engine and speech_engine != "disabled":
+        if speech_engine and speech_engine != "disabled" and enable_fallback:
+            # Use fallback service for automatic online/offline switching
+            self.transcription_service = FallbackTranscriptionService()
+            log.info(f"Using FallbackTranscriptionService with primary engine: {speech_engine}")
+        elif speech_engine and speech_engine != "disabled":
+            # Use direct speech recognition without fallback
             self.transcription_service = SpeechRecognitionService()
-            log.info(f"Using SpeechRecognition Service with {speech_engine} engine")
+            log.info(f"Using SpeechRecognitionService with {speech_engine} engine (fallback disabled)")
         elif Config.GOOGLE_TRANSCRIBE["enabled"]:
             self.transcription_service = GoogleTranscribeService()
             log.info("Using Google Transcribe Service for transcription")
