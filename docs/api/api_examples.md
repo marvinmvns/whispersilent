@@ -2,6 +2,8 @@
 
 Este documento fornece exemplos práticos de como usar a API HTTP do WhisperSilent para monitoramento, controle e recuperação de dados.
 
+**Nota**: Alguns recursos avançados (Agregação Horária e API em Tempo Real) estão disponíveis no código mas podem requerer configuração específica dependendo do modo de execução do sistema.
+
 ## URLs Base
 
 - **Desenvolvimento Local**: `http://localhost:8080`
@@ -245,7 +247,7 @@ curl http://localhost:8080/transcriptions/summary
 curl "http://localhost:8080/transcriptions/summary?hours=6"
 ```
 
-## 3. Controle do Sistema
+## 5. Controle do Sistema
 
 ### Ligar/Desligar Envio Automático para API
 ```bash
@@ -291,7 +293,17 @@ curl -X POST http://localhost:8080/transcriptions/send-unsent
 curl -X POST http://localhost:8080/aggregation/send-unsent
 ```
 
-## 3. API de Transcrição em Tempo Real (WebSocket)
+**Resposta de Exemplo:**
+```json
+{
+  "message": "Sent 3 aggregated texts, 0 failed",
+  "sent_count": 3,
+  "failed_count": 0,
+  "timestamp": 1704067200.0
+}
+```
+
+## 4. API de Transcrição em Tempo Real (WebSocket)
 
 ### Configuração WebSocket
 
@@ -573,7 +585,7 @@ curl http://localhost:8080/realtime/status
 }
 ```
 
-## 4. Exportação de Dados
+## 6. Exportação de Dados
 
 ### Exportar Todas as Transcrições
 ```bash
@@ -589,7 +601,7 @@ curl -X POST http://localhost:8080/transcriptions/export
 }
 ```
 
-## 5. Configuração da API Externa
+## 7. Configuração da API Externa
 
 ### Configuração Opcional de API_KEY
 
@@ -704,7 +716,7 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
 ```
 
-## 6. Monitoramento Automático
+## 8. Monitoramento Automático
 
 ### Script de Monitoramento em Shell
 ```bash
@@ -784,7 +796,7 @@ while True:
     time.sleep(60)  # Verificar a cada minuto
 ```
 
-## 7. Integração com Docker
+## 9. Integração com Docker
 
 ### Dockerfile de Exemplo para API Receptora
 ```dockerfile
