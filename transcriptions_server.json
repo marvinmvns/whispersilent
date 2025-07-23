@@ -1,23 +1,23 @@
 {
   "metadata": {
-    "created_at": "2025-07-21T20:12:51.276162",
-    "engine": "google",
+    "created_at": "2025-07-22T22:32:17.589024",
+    "engine": "vosk",
     "language": "pt-BR",
     "audio_config": {
       "sample_rate": 16000,
       "channels": 1,
-      "device": "auto"
+      "device": "6"
     }
   },
   "stats": {
-    "session_start": "2025-07-21T20:11:55.505340",
-    "total_transcriptions": 33,
-    "total_audio_chunks": 33,
-    "successful_transcriptions": 4,
+    "session_start": "2025-07-22T22:30:57.139381",
+    "total_transcriptions": 86,
+    "total_audio_chunks": 98,
+    "successful_transcriptions": 57,
     "empty_transcriptions": 29,
     "errors": 0,
-    "engine_used": "google",
-    "last_update": "2025-07-21T20:12:51.271233"
+    "engine_used": "vosk",
+    "last_update": "2025-07-22T22:32:15.698461"
   },
   "transcriptions": [
     {
@@ -448,6 +448,695 @@
         "rms_amplitude": 1025.2470279267166
       },
       "engine": "google"
+    },
+    {
+      "id": 34,
+      "timestamp": "2025-07-22T21:54:36.247106",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 0.2574,
+      "audio_info": {
+        "duration_ms": 2019.1249999999998,
+        "sample_count": 32306,
+        "max_amplitude": 2574.0,
+        "rms_amplitude": 436.28545176158195
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 35,
+      "timestamp": "2025-07-22T21:54:37.190314",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.2500000000002,
+        "sample_count": 32084,
+        "max_amplitude": 19796.0,
+        "rms_amplitude": 3230.114015149694
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 36,
+      "timestamp": "2025-07-22T21:54:38.192819",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 21447.0,
+        "rms_amplitude": 3984.7346864047563
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 37,
+      "timestamp": "2025-07-22T21:54:39.195445",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 21013.0,
+        "rms_amplitude": 3484.6320971011205
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 38,
+      "timestamp": "2025-07-22T21:54:40.197999",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.2500000000002,
+        "sample_count": 32084,
+        "max_amplitude": 14388.0,
+        "rms_amplitude": 3068.7213776309973
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 39,
+      "timestamp": "2025-07-22T21:54:41.200422",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 15809.0,
+        "rms_amplitude": 2556.3314895150006
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 40,
+      "timestamp": "2025-07-22T21:54:42.203110",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 15724.0,
+        "rms_amplitude": 2675.236437857725
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 41,
+      "timestamp": "2025-07-22T21:54:43.163494",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 0.2655,
+      "audio_info": {
+        "duration_ms": 1920.0,
+        "sample_count": 30720,
+        "max_amplitude": 2655.0,
+        "rms_amplitude": 455.194439981536
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 42,
+      "timestamp": "2025-07-22T21:55:10.558599",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 0.2005,
+      "audio_info": {
+        "duration_ms": 2001.75,
+        "sample_count": 32028,
+        "max_amplitude": 2005.0,
+        "rms_amplitude": 502.8896734541201
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 43,
+      "timestamp": "2025-07-22T21:55:11.502661",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.2500000000002,
+        "sample_count": 32084,
+        "max_amplitude": 13203.0,
+        "rms_amplitude": 1511.379935790612
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 44,
+      "timestamp": "2025-07-22T21:55:12.505445",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2004.75,
+        "sample_count": 32076,
+        "max_amplitude": 13368.0,
+        "rms_amplitude": 2689.182588460026
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 45,
+      "timestamp": "2025-07-22T21:55:13.507840",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2001.9999999999998,
+        "sample_count": 32032,
+        "max_amplitude": 11605.0,
+        "rms_amplitude": 1720.1666646783763
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 46,
+      "timestamp": "2025-07-22T21:55:14.488923",
+      "text": "Please download the model from https://alphacephei.com/vosk/models and unpack as 'model' in the current folder.",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 1962.625,
+        "sample_count": 31402,
+        "max_amplitude": 10190.0,
+        "rms_amplitude": 1339.1269713552633
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 47,
+      "timestamp": "2025-07-22T22:31:00.601234",
+      "text": "os bilhetes <UNK>",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2003.4999999999998,
+        "sample_count": 32056,
+        "max_amplitude": 32767.0,
+        "rms_amplitude": 5210.500494429682
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 48,
+      "timestamp": "2025-07-22T22:31:01.373618",
+      "text": "antes de julho",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 22290.0,
+        "rms_amplitude": 1715.5777661787934
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 49,
+      "timestamp": "2025-07-22T22:31:03.259299",
+      "text": "<UNK>",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2028.9375,
+        "sample_count": 32463,
+        "max_amplitude": 12737.0,
+        "rms_amplitude": 567.5787502282167
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 50,
+      "timestamp": "2025-07-22T22:31:05.269596",
+      "text": "teste",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2011.7500000000002,
+        "sample_count": 32188,
+        "max_amplitude": 25927.0,
+        "rms_amplitude": 1906.387639812474
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 51,
+      "timestamp": "2025-07-22T22:31:07.271340",
+      "text": "testando",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 17396.0,
+        "rms_amplitude": 2073.9133206540746
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 52,
+      "timestamp": "2025-07-22T22:31:09.294578",
+      "text": "dois três quatro",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 18406.0,
+        "rms_amplitude": 1802.3283046347003
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 53,
+      "timestamp": "2025-07-22T22:31:11.281785",
+      "text": "t",
+      "confidence": 0.9662,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 9662.0,
+        "rms_amplitude": 823.4833793983697
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 54,
+      "timestamp": "2025-07-22T22:31:13.353789",
+      "text": "estando esta perfeito aqui",
+      "confidence": 0.8408,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 8408.0,
+        "rms_amplitude": 1666.1660179702951
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 55,
+      "timestamp": "2025-07-22T22:31:15.310078",
+      "text": "abração",
+      "confidence": 0.7363,
+      "audio_info": {
+        "duration_ms": 2016.0,
+        "sample_count": 32256,
+        "max_amplitude": 7363.0,
+        "rms_amplitude": 763.0336600376463
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 56,
+      "timestamp": "2025-07-22T22:31:17.307358",
+      "text": "calibração",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 15154.0,
+        "rms_amplitude": 1558.9706231464297
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 57,
+      "timestamp": "2025-07-22T22:31:19.357182",
+      "text": "está perfeita",
+      "confidence": 0.8288,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 8288.0,
+        "rms_amplitude": 907.3481092609483
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 58,
+      "timestamp": "2025-07-22T22:31:21.339158",
+      "text": "<UNK>",
+      "confidence": 0.1967,
+      "audio_info": {
+        "duration_ms": 2026.6250000000002,
+        "sample_count": 32426,
+        "max_amplitude": 1967.0,
+        "rms_amplitude": 600.086016624637
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 59,
+      "timestamp": "2025-07-22T22:31:23.344488",
+      "text": "<UNK>",
+      "confidence": 0.1892,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 1892.0,
+        "rms_amplitude": 429.9746720447758
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 60,
+      "timestamp": "2025-07-22T22:31:25.349697",
+      "text": "<UNK>",
+      "confidence": 0.193,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 1930.0,
+        "rms_amplitude": 389.3500010841683
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 61,
+      "timestamp": "2025-07-22T22:31:27.354600",
+      "text": "<UNK>",
+      "confidence": 0.1882,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 1882.0,
+        "rms_amplitude": 407.7480477425972
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 62,
+      "timestamp": "2025-07-22T22:31:29.551553",
+      "text": "além no jornal o globo",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2003.5625000000002,
+        "sample_count": 32057,
+        "max_amplitude": 32767.0,
+        "rms_amplitude": 6172.894319942593
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 63,
+      "timestamp": "2025-07-22T22:31:31.594705",
+      "text": "arroz também bege",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2007.1249999999998,
+        "sample_count": 32114,
+        "max_amplitude": 32767.0,
+        "rms_amplitude": 5821.775697066593
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 64,
+      "timestamp": "2025-07-22T22:31:33.541844",
+      "text": "escola particular que simpático",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 30832.0,
+        "rms_amplitude": 3175.9870188590744
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 65,
+      "timestamp": "2025-07-22T22:31:35.657069",
+      "text": "aguardem",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2016.0,
+        "sample_count": 32256,
+        "max_amplitude": 32767.0,
+        "rms_amplitude": 3945.9930028632634
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 66,
+      "timestamp": "2025-07-22T22:31:37.393299",
+      "text": "<UNK>",
+      "confidence": 0.1735,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 1735.0,
+        "rms_amplitude": 377.540355585985
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 67,
+      "timestamp": "2025-07-22T22:31:39.430977",
+      "text": "leia",
+      "confidence": 0.2658,
+      "audio_info": {
+        "duration_ms": 2007.3124999999998,
+        "sample_count": 32117,
+        "max_amplitude": 2658.0,
+        "rms_amplitude": 443.49779609333535
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 68,
+      "timestamp": "2025-07-22T22:31:41.403386",
+      "text": "<UNK>",
+      "confidence": 0.1687,
+      "audio_info": {
+        "duration_ms": 2003.3124999999998,
+        "sample_count": 32053,
+        "max_amplitude": 1687.0,
+        "rms_amplitude": 376.6318010413797
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 69,
+      "timestamp": "2025-07-22T22:31:43.404490",
+      "text": "<UNK>",
+      "confidence": 0.1759,
+      "audio_info": {
+        "duration_ms": 2005.375,
+        "sample_count": 32086,
+        "max_amplitude": 1759.0,
+        "rms_amplitude": 372.2742770871889
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 70,
+      "timestamp": "2025-07-22T22:31:45.411727",
+      "text": "um",
+      "confidence": 0.1737,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 1737.0,
+        "rms_amplitude": 373.4777342956988
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 71,
+      "timestamp": "2025-07-22T22:31:47.427285",
+      "text": "<UNK>",
+      "confidence": 0.1686,
+      "audio_info": {
+        "duration_ms": 2017.9999999999998,
+        "sample_count": 32288,
+        "max_amplitude": 1686.0,
+        "rms_amplitude": 364.6437393914824
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 72,
+      "timestamp": "2025-07-22T22:31:49.432800",
+      "text": "<UNK>",
+      "confidence": 0.1702,
+      "audio_info": {
+        "duration_ms": 2003.6874999999998,
+        "sample_count": 32059,
+        "max_amplitude": 1702.0,
+        "rms_amplitude": 374.20480476444067
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 73,
+      "timestamp": "2025-07-22T22:31:51.438578",
+      "text": "<UNK>",
+      "confidence": 0.1975,
+      "audio_info": {
+        "duration_ms": 2005.0,
+        "sample_count": 32080,
+        "max_amplitude": 1975.0,
+        "rms_amplitude": 354.8860053267922
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 74,
+      "timestamp": "2025-07-22T22:31:53.444901",
+      "text": "<UNK>",
+      "confidence": 0.1766,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 1766.0,
+        "rms_amplitude": 380.94350789856884
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 75,
+      "timestamp": "2025-07-22T22:31:55.482737",
+      "text": "<UNK>",
+      "confidence": 0.16,
+      "audio_info": {
+        "duration_ms": 2039.3124999999998,
+        "sample_count": 32629,
+        "max_amplitude": 1600.0,
+        "rms_amplitude": 355.09242707960556
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 76,
+      "timestamp": "2025-07-22T22:31:57.695507",
+      "text": "paixão de jundiaí",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2003.3750000000002,
+        "sample_count": 32054,
+        "max_amplitude": 32767.0,
+        "rms_amplitude": 2275.938873603564
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 77,
+      "timestamp": "2025-07-22T22:31:59.510017",
+      "text": "<UNK>",
+      "confidence": 0.6316,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 6316.0,
+        "rms_amplitude": 526.4599850698005
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 78,
+      "timestamp": "2025-07-22T22:32:01.503690",
+      "text": "ah",
+      "confidence": 0.3095,
+      "audio_info": {
+        "duration_ms": 2005.3125,
+        "sample_count": 32085,
+        "max_amplitude": 3095.0,
+        "rms_amplitude": 409.11840435995674
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 79,
+      "timestamp": "2025-07-22T22:32:03.510442",
+      "text": "ok",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2001.4375000000002,
+        "sample_count": 32023,
+        "max_amplitude": 16781.0,
+        "rms_amplitude": 915.549020530051
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 80,
+      "timestamp": "2025-07-22T22:32:05.588993",
+      "text": "é o povo quem dirige",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2000.5625,
+        "sample_count": 32009,
+        "max_amplitude": 32767.0,
+        "rms_amplitude": 1960.0159857449235
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 81,
+      "timestamp": "2025-07-22T22:32:07.758789",
+      "text": "definitivamente de deixa os dois lados",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2004.375,
+        "sample_count": 32070,
+        "max_amplitude": 24381.0,
+        "rms_amplitude": 2275.7302767430915
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 82,
+      "timestamp": "2025-07-22T22:32:10.064424",
+      "text": "agente autorizado dois ou de outros erros",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2004.3125000000002,
+        "sample_count": 32069,
+        "max_amplitude": 13662.0,
+        "rms_amplitude": 1940.6587380216677
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 83,
+      "timestamp": "2025-07-22T22:32:11.639027",
+      "text": "descrição",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2026.6875,
+        "sample_count": 32427,
+        "max_amplitude": 13328.0,
+        "rms_amplitude": 832.6105771652869
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 84,
+      "timestamp": "2025-07-22T22:32:13.718247",
+      "text": "que fonte de proteínas",
+      "confidence": 1.0,
+      "audio_info": {
+        "duration_ms": 2006.8125,
+        "sample_count": 32109,
+        "max_amplitude": 13858.0,
+        "rms_amplitude": 1333.578958650297
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 85,
+      "timestamp": "2025-07-22T22:32:15.697150",
+      "text": "obs",
+      "confidence": 0.6051,
+      "audio_info": {
+        "duration_ms": 2032.8750000000002,
+        "sample_count": 32526,
+        "max_amplitude": 6051.0,
+        "rms_amplitude": 722.8943868673684
+      },
+      "engine": "vosk"
+    },
+    {
+      "id": 86,
+      "timestamp": "2025-07-22T22:32:17.589007",
+      "text": "<UNK>",
+      "confidence": 0.1753,
+      "audio_info": {
+        "duration_ms": 2010.25,
+        "sample_count": 32164,
+        "max_amplitude": 1753.0,
+        "rms_amplitude": 368.3206099243739
+      },
+      "engine": "vosk"
     }
   ]
 }

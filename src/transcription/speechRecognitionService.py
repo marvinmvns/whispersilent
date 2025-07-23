@@ -260,10 +260,7 @@ class SpeechRecognitionService:
             elif self.engine == TranscriptionEngine.VOSK:
                 model_path = self.engine_config.get("model_path")
                 if model_path and os.path.exists(model_path):
-                    return self.recognizer.recognize_vosk(
-                        audio_data,
-                        model_path=model_path
-                    )
+                    return self._recognize_vosk_custom(audio_data, model_path)
                 else:
                     raise ValueError("Vosk model path not configured or not found")
             
@@ -302,8 +299,7 @@ class SpeechRecognitionService:
         try:
             start_time = time.time()
             
-            # Debug output to console
-            print(f"\n🎤 [DEBUG] Processando áudio com {self.engine.value} ({audio_chunk.size} samples)...")
+            # Debug output to log
             log.debug(f'Processing audio chunk ({audio_chunk.size} samples) with {self.engine.value}...')
             
             # Convert numpy array to AudioData
@@ -320,7 +316,7 @@ class SpeechRecognitionService:
                 log.info(f'{self.engine.value} transcription in {processing_time_ms:.2f}ms: "{transcription}"')
                 return transcription.strip()
             else:
-                print(f"❌ [DEBUG] Nenhuma fala detectada ({self.engine.value})")
+                log.debug(f"No speech detected ({self.engine.value})")
                 log.debug(f'No speech detected by {self.engine.value}')
                 return ""
                 
@@ -396,6 +392,46 @@ class SpeechRecognitionService:
         except ValueError:
             log.error(f"Invalid engine name: {engine_name}")
             return False
+
+    def _recognize_vosk_custom(self, audio_data, model_path: str) -> str:
+        """
+        Custom Vosk recognition that uses the specified model path instead of hardcoded 'model' folder
+        
+        Args:
+            audio_data: AudioData object from speech_recognition
+            model_path: Path to the Vosk model directory
+            
+        Returns:
+            str: Transcribed text
+        """
+        try:
+            from vosk import KaldiRecognizer, Model
+            import json
+            
+            # Initialize model if not already done
+            if not hasattr(self, 'vosk_model') or self._current_vosk_model_path != model_path:
+                log.info(f"Loading Vosk model from: {model_path}")
+                self.vosk_model = Model(model_path)
+                self._current_vosk_model_path = model_path
+            
+            # Create recognizer with 16kHz sample rate
+            rec = KaldiRecognizer(self.vosk_model, 16000)
+            
+            # Convert audio data to the format Vosk expects
+            raw_data = audio_data.get_raw_data(convert_rate=16000, convert_width=2)
+            
+            # Process the audio
+            rec.AcceptWaveform(raw_data)
+            result = rec.FinalResult()
+            
+            # Parse the JSON result
+            result_dict = json.loads(result)
+            return result_dict.get('text', '')
+            
+        except ImportError:
+            raise ValueError("Vosk library not installed. Install with: pip install vosk")
+        except Exception as e:
+            raise ValueError(f"Vosk recognition failed: {e}")
 
 if __name__ == '__main__':
     # Test the service with different engines
