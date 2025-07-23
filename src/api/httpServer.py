@@ -1,5 +1,7 @@
 import json
 import time
+import os
+from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from typing import Optional, Dict, Any
@@ -66,6 +68,18 @@ class TranscriptionHTTPHandler(BaseHTTPRequestHandler):
                 self._handle_get_summary(query_params)
             elif path == '/status':
                 self._handle_get_status()
+            elif path == '/aggregation/status':
+                self._handle_aggregation_status()
+            elif path == '/aggregation/texts':
+                self._handle_aggregation_texts(query_params)
+            elif path.startswith('/aggregation/texts/'):
+                # Handle specific hour timestamp
+                hour_timestamp = path.split('/')[-1]
+                self._handle_aggregation_text_by_hour(hour_timestamp)
+            elif path == '/aggregation/statistics':
+                self._handle_aggregation_statistics()
+            elif path == '/realtime/status':
+                self._handle_realtime_status()
             elif path == '/api-docs':
                 self._handle_swagger_ui()
             elif path == '/api-docs.json':
@@ -97,6 +111,12 @@ class TranscriptionHTTPHandler(BaseHTTPRequestHandler):
                 self._handle_start_pipeline()
             elif path == '/control/stop':
                 self._handle_stop_pipeline()
+            elif path == '/aggregation/finalize':
+                self._handle_aggregation_finalize()
+            elif path == '/aggregation/toggle':
+                self._handle_aggregation_toggle()
+            elif path == '/aggregation/send-unsent':
+                self._handle_aggregation_send_unsent()
             else:
                 self._send_error_response("Endpoint not found", 404)
                 
@@ -372,6 +392,202 @@ class TranscriptionHTTPHandler(BaseHTTPRequestHandler):
                 })
         except Exception as e:
             self._send_error_response(f"Failed to stop pipeline: {str(e)}")
+    
+    # Aggregation endpoints
+    def _handle_aggregation_status(self):
+        """Get current aggregation status"""
+        if not self.pipeline or not hasattr(self.pipeline, 'hourly_aggregator'):
+            self._send_error_response("Aggregation service not available", 503)
+            return
+        
+        aggregator = self.pipeline.hourly_aggregator
+        status = {
+            "enabled": aggregator.enabled,
+            "running": getattr(aggregator, 'running', True),
+            "current_hour_start": aggregator.current_hour_start,
+            "current_hour_formatted": datetime.fromtimestamp(aggregator.current_hour_start).strftime('%Y-%m-%d %H:%M') if aggregator.current_hour_start else None,
+            "current_transcription_count": len(aggregator.current_transcriptions),
+            "current_partial_text": " ".join(aggregator.current_text_parts),
+            "current_partial_length": len(" ".join(aggregator.current_text_parts)),
+            "last_transcription_time": aggregator.last_transcription_time,
+            "last_transcription_formatted": datetime.fromtimestamp(aggregator.last_transcription_time).strftime('%Y-%m-%d %H:%M:%S') if aggregator.last_transcription_time else None,
+            "minutes_since_last": (time.time() - aggregator.last_transcription_time) / 60 if aggregator.last_transcription_time else None,
+            "total_aggregated_hours": len(aggregator.aggregated_texts),
+            "min_silence_gap_minutes": aggregator.min_silence_gap_minutes
+        }
+        self._send_json_response(status)
+    
+    def _handle_aggregation_texts(self, query_params):
+        """Get aggregated texts"""
+        if not self.pipeline or not hasattr(self.pipeline, 'hourly_aggregator'):
+            self._send_error_response("Aggregation service not available", 503)
+            return
+        
+        limit = None
+        if 'limit' in query_params:
+            try:
+                limit = int(query_params['limit'][0])
+            except (ValueError, IndexError):
+                self._send_error_response("Invalid limit parameter", 400)
+                return
+        
+        aggregator = self.pipeline.hourly_aggregator
+        texts = aggregator.aggregated_texts[-limit:] if limit else aggregator.aggregated_texts
+        self._send_json_response([asdict(text) for text in texts])
+    
+    def _handle_aggregation_text_by_hour(self, hour_timestamp):
+        """Get aggregated text for specific hour"""
+        if not self.pipeline or not hasattr(self.pipeline, 'hourly_aggregator'):
+            self._send_error_response("Aggregation service not available", 503)
+            return
+        
+        try:
+            timestamp = float(hour_timestamp)
+        except ValueError:
+            self._send_error_response("Invalid hour timestamp", 400)
+            return
+        
+        aggregator = self.pipeline.hourly_aggregator
+        for text in aggregator.aggregated_texts:
+            if text.hour_timestamp == timestamp:
+                self._send_json_response(asdict(text))
+                return
+        
+        self._send_error_response("Aggregated text not found", 404)
+    
+    def _handle_aggregation_statistics(self):
+        """Get aggregation statistics"""
+        if not self.pipeline or not hasattr(self.pipeline, 'hourly_aggregator'):
+            self._send_error_response("Aggregation service not available", 503)
+            return
+        
+        aggregator = self.pipeline.hourly_aggregator
+        total_transcriptions = sum(text.transcription_count for text in aggregator.aggregated_texts)
+        total_characters = sum(len(text.full_text) for text in aggregator.aggregated_texts)
+        sent_count = sum(1 for text in aggregator.aggregated_texts if text.sent_to_api)
+        pending_count = sum(1 for text in aggregator.aggregated_texts if not text.sent_to_api)
+        
+        stats = {
+            "total_aggregated_hours": len(aggregator.aggregated_texts),
+            "total_transcriptions_aggregated": total_transcriptions,
+            "total_characters_aggregated": total_characters,
+            "sent_to_api_count": sent_count,
+            "pending_api_send": pending_count,
+            "average_transcriptions_per_hour": total_transcriptions / len(aggregator.aggregated_texts) if aggregator.aggregated_texts else 0,
+            "average_characters_per_hour": total_characters / len(aggregator.aggregated_texts) if aggregator.aggregated_texts else 0,
+            "current_period_transcriptions": len(aggregator.current_transcriptions),
+            "current_period_characters": len(" ".join(aggregator.current_text_parts)),
+            "enabled": aggregator.enabled,
+            "running": aggregator.running
+        }
+        self._send_json_response(stats)
+    
+    def _handle_aggregation_finalize(self):
+        """Force finalize current aggregation"""
+        if not self.pipeline or not hasattr(self.pipeline, 'hourly_aggregator'):
+            self._send_error_response("Aggregation service not available", 503)
+            return
+        
+        aggregator = self.pipeline.hourly_aggregator
+        if not aggregator.current_transcriptions:
+            self._send_error_response("No current transcriptions to finalize", 400)
+            return
+        
+        try:
+            finalized_text = aggregator.finalize_current_hour("manual_finalization")
+            self._send_json_response(asdict(finalized_text))
+        except Exception as e:
+            self._send_error_response(f"Failed to finalize aggregation: {str(e)}")
+    
+    def _handle_aggregation_toggle(self):
+        """Toggle aggregation enabled/disabled"""
+        if not self.pipeline or not hasattr(self.pipeline, 'hourly_aggregator'):
+            self._send_error_response("Aggregation service not available", 503)
+            return
+        
+        # Parse enabled parameter
+        query_params = parse_qs(urlparse(self.path).query)
+        if 'enabled' not in query_params:
+            self._send_error_response("Missing 'enabled' parameter", 400)
+            return
+        
+        try:
+            enabled = query_params['enabled'][0].lower() == 'true'
+        except (IndexError, AttributeError):
+            self._send_error_response("Invalid 'enabled' parameter", 400)
+            return
+        
+        aggregator = self.pipeline.hourly_aggregator
+        aggregator.enabled = enabled
+        
+        message = "Aggregation enabled" if enabled else "Aggregation disabled"
+        self._send_json_response({
+            "message": message,
+            "enabled": enabled,
+            "timestamp": time.time()
+        })
+    
+    def _handle_aggregation_send_unsent(self):
+        """Send unsent aggregated texts"""
+        if not self.pipeline or not hasattr(self.pipeline, 'hourly_aggregator'):
+            self._send_error_response("Aggregation service not available", 503)
+            return
+        
+        aggregator = self.pipeline.hourly_aggregator
+        unsent_texts = [text for text in aggregator.aggregated_texts if not text.sent_to_api]
+        
+        sent_count = 0
+        failed_count = 0
+        
+        for text in unsent_texts:
+            try:
+                # Send to API via the pipeline's API service
+                self.pipeline.api_service.send_aggregated_text(text.full_text, {
+                    "hour_timestamp": text.hour_timestamp,
+                    "transcription_count": text.transcription_count,
+                    "duration_minutes": text.metadata.get("total_duration_minutes", 0),
+                    "aggregation_type": "hourly"
+                })
+                text.sent_to_api = True
+                sent_count += 1
+            except Exception as e:
+                log.error(f"Failed to send aggregated text: {e}")
+                failed_count += 1
+        
+        message = f"Sent {sent_count} aggregated texts, {failed_count} failed"
+        self._send_json_response({
+            "message": message,
+            "sent_count": sent_count,
+            "failed_count": failed_count,
+            "timestamp": time.time()
+        })
+    
+    def _handle_realtime_status(self):
+        """Get real-time API status"""
+        # Check if realtime API is available
+        realtime_enabled = os.getenv("REALTIME_API_ENABLED", "false").lower() == "true"
+        
+        if not realtime_enabled:
+            self._send_json_response({
+                "enabled": False,
+                "running": False,
+                "message": "Real-time API disabled in configuration"
+            })
+            return
+        
+        # Get status from global realtime_api or pipeline
+        status = {
+            "enabled": realtime_enabled,
+            "running": True,  # Assume running if enabled
+            "port": int(os.getenv("REALTIME_WEBSOCKET_PORT", "8081")),
+            "connected_clients": 0,  # Would need actual client count
+            "max_connections": int(os.getenv("REALTIME_MAX_CONNECTIONS", "50")),
+            "buffer_size": 0,  # Would need actual buffer size
+            "max_buffer_size": int(os.getenv("REALTIME_BUFFER_SIZE", "100")),
+            "heartbeat_interval": int(os.getenv("REALTIME_HEARTBEAT_INTERVAL", "30")),
+            "clients": []  # Would need actual client list
+        }
+        self._send_json_response(status)
 
 class TranscriptionHTTPServer:
     def __init__(self, pipeline, host='localhost', port=8080):

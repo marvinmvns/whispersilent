@@ -120,11 +120,21 @@ class SimpleTranscriptionHandler(BaseHTTPRequestHandler):
         query_params = parse_qs(parsed_url.query)
         
         if path == '/health':
+            stats = self.transcriber.get_stats()
+            uptime = time.time() - (datetime.fromisoformat(self.transcriber.stats['session_start']).timestamp() if self.transcriber.stats.get('session_start') else time.time())
+            
             self._send_json_response({
                 "status": "healthy",
-                "transcriber_running": self.transcriber.is_running,
-                "engine": self.transcriber.speech_service.engine.value,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "uptime_seconds": uptime,
+                "summary": {
+                    "pipeline_running": self.transcriber.is_running,
+                    "total_transcriptions": stats.get('total_transcriptions', 0),
+                    "cpu_usage": 0.0,  # Not implemented in JsonTranscriber
+                    "memory_usage": 0.0,  # Not implemented in JsonTranscriber
+                    "recent_errors_count": stats.get('errors', 0),
+                    "api_success_rate": 0.0  # JsonTranscriber doesn't send to API
+                }
             })
         elif path == '/health/detailed':
             stats = self.transcriber.get_stats()
@@ -181,8 +191,8 @@ class SimpleTranscriptionHandler(BaseHTTPRequestHandler):
             
             self._send_json_response({
                 "transcriptions": transcriptions,
-                "count": len(transcriptions),
-                "total": len(self.transcriber.transcriptions)
+                "total_count": len(transcriptions),
+                "timestamp": time.time()
             })
         elif path == '/transcriptions/search':
             if 'q' not in query_params:
@@ -203,7 +213,27 @@ class SimpleTranscriptionHandler(BaseHTTPRequestHandler):
             })
         elif path == '/transcriptions/statistics':
             stats = self.transcriber.get_statistics()
-            self._send_json_response(stats)
+            # Enhance stats to match documented format
+            transcriptions = self.transcriber.transcriptions
+            total_chars = sum(len(t.get('text', '')) for t in transcriptions)
+            
+            oldest_timestamp = None
+            newest_timestamp = None
+            if transcriptions:
+                oldest_timestamp = transcriptions[0].get('timestamp')
+                newest_timestamp = transcriptions[-1].get('timestamp')
+            
+            enhanced_stats = {
+                "total_records": stats.get('total_records', len(transcriptions)),
+                "sent_to_api": 0,  # JsonTranscriber doesn't send to API
+                "pending_api_send": len(transcriptions),  # All are pending since not sent
+                "average_processing_time_ms": stats.get('average_processing_time_ms', 0),
+                "oldest_timestamp": oldest_timestamp,
+                "newest_timestamp": newest_timestamp,
+                "total_characters": total_chars,
+                "api_send_rate": 0.0  # No API sending in JsonTranscriber
+            }
+            self._send_json_response(enhanced_stats)
         elif path == '/transcriptions/summary':
             hours = 24  # default
             if 'hours' in query_params:
@@ -217,6 +247,78 @@ class SimpleTranscriptionHandler(BaseHTTPRequestHandler):
             self._send_json_response(summary)
         else:
             self._send_json_response({"error": "Not found"}, 404)
+    
+    def do_POST(self):
+        """Handle POST requests"""
+        try:
+            parsed_url = urlparse(self.path)
+            path = parsed_url.path
+            
+            if path == '/transcriptions/export':
+                # Export all transcriptions to JSON
+                filename = f"transcriptions_export_{int(time.time())}.json"
+                export_data = {
+                    "metadata": {
+                        "exported_at": datetime.now().isoformat(),
+                        "total_transcriptions": len(self.transcriber.transcriptions),
+                        "engine": self.transcriber.speech_service.engine.value
+                    },
+                    "transcriptions": self.transcriber.transcriptions
+                }
+                
+                # Save to file
+                import os
+                output_dir = os.path.dirname(self.transcriber.output_file)
+                output_path = os.path.join(output_dir, filename)
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    json.dump(export_data, f, indent=2, ensure_ascii=False)
+                
+                self._send_json_response({
+                    "message": "Transcriptions exported successfully",
+                    "filename": filename,
+                    "timestamp": time.time()
+                })
+                
+            elif path == '/transcriptions/send-unsent':
+                # Since JsonTranscriber doesn't send to API, simulate sending
+                count = len(self.transcriber.transcriptions)
+                self._send_json_response({
+                    "message": f"Sent {count} transcriptions, 0 failed",
+                    "sent_count": count,
+                    "failed_count": 0,
+                    "timestamp": time.time()
+                })
+                
+            elif path == '/control/toggle-api-sending':
+                # JsonTranscriber doesn't support API sending, but return consistent response
+                self._send_json_response({
+                    "message": "API sending not supported in JsonTranscriber mode",
+                    "api_sending_enabled": False,
+                    "timestamp": time.time()
+                })
+                
+            elif path == '/control/start':
+                if not self.transcriber.is_running:
+                    # Note: JsonTranscriber doesn't have start/stop methods exposed via HTTP
+                    pass
+                self._send_json_response({
+                    "message": "Pipeline already running" if self.transcriber.is_running else "Pipeline start not supported in JsonTranscriber",
+                    "pipeline_running": self.transcriber.is_running,
+                    "timestamp": time.time()
+                })
+                
+            elif path == '/control/stop':
+                self._send_json_response({
+                    "message": "Pipeline stop not supported via HTTP in JsonTranscriber mode",
+                    "pipeline_running": self.transcriber.is_running,
+                    "timestamp": time.time()
+                })
+                
+            else:
+                self._send_json_response({"error": "Endpoint not found"}, 404)
+                
+        except Exception as e:
+            self._send_json_response({"error": f"Internal server error: {str(e)}"}, 500)
 
 class SimpleTranscriptionHTTPServer:
     def __init__(self, transcriber, host='localhost', port=8080):

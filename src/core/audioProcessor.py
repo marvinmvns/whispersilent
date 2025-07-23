@@ -74,7 +74,7 @@ class AudioProcessor:
                             self.speaking = False
                             if self.current_audio_chunk.size > 0:
                                 yield self.current_audio_chunk # Yield the chunk
-                                logger.debug(f'Fim da fala detectado, enviando chunk de {self.current_audio_chunk.size} samples')
+                                log.debug(f'Fim da fala detectado, enviando chunk de {self.current_audio_chunk.size} samples')
                                 self.current_audio_chunk = np.array([], dtype=np.int16)
                     elif self.speaking:
                         # Still speaking
@@ -83,17 +83,17 @@ class AudioProcessor:
                         # If chunk reaches max size, yield it
                         if self.current_audio_chunk.size >= self.max_chunk_samples:
                             yield self.current_audio_chunk # Yield the chunk
-                            logger.debug(f'Chunk máximo atingido, enviando {self.current_audio_chunk.size} samples')
+                            log.debug(f'Chunk máximo atingido, enviando {self.current_audio_chunk.size} samples')
                             self.current_audio_chunk = np.array([], dtype=np.int16)
 
             except queue.Empty:
                 # No data in queue, continue waiting unless a stop signal is received
                 pass
             except Exception as e:
-                logger.error(f"Erro no processamento de áudio: {e}")
+                log.error(f"Erro no processamento de áudio: {e}")
                 break # Exit loop on error
 
         # Flush any remaining audio when processing stops
         if self.current_audio_chunk.size > 0:
             yield self.current_audio_chunk
-            logger.debug(f'Flush: enviando último chunk de {self.current_audio_chunk.size} samples')
+            log.debug(f'Flush: enviando último chunk de {self.current_audio_chunk.size} samples')

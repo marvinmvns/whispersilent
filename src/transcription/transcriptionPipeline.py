@@ -54,6 +54,12 @@ class TranscriptionPipeline:
         self.transcription_storage = TranscriptionStorage()
         self.file_manager = TranscriptionFileManager()
         
+        # Initialize hourly aggregator if enabled
+        from hourlyAggregator import HourlyAggregator
+        self.hourly_aggregator = HourlyAggregator(self.api_service)
+        if os.getenv("HOURLY_AGGREGATION_ENABLED", "true").lower() == "true":
+            self.hourly_aggregator.start()
+        
         self.is_running = False
         self.processing_thread = None
         self.api_sending_enabled = True  # Toggle for proactive API sending

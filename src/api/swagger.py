@@ -2,7 +2,7 @@
 OpenAPI/Swagger documentation for WhisperSilent HTTP API
 """
 import os
-from core.config import Config
+from config import Config
 
 def get_swagger_spec():
     """Get OpenAPI/Swagger specification with dynamic server URL"""
