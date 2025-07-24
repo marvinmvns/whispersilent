@@ -36,6 +36,9 @@ from config import Config
 # Load environment variables from .env file
 load_dotenv()
 
+# Force Google engine before importing (tested and working)
+os.environ['SPEECH_RECOGNITION_ENGINE'] = 'google'
+
 # Global variables for graceful shutdown
 pipeline = None
 http_server = None
@@ -155,10 +158,9 @@ def main():
         log.info('🏗️  Initializing advanced transcription pipeline...')
         pipeline = TranscriptionPipeline()
         
-        # Initialize hourly aggregator
-        log.info('📊 Initializing hourly aggregation system...')
-        hourly_aggregator = HourlyAggregator(pipeline.transcription_storage)
-        hourly_aggregator.start()
+        # Use the pipeline's built-in hourly aggregator instead of creating a new one
+        log.info('📊 Using pipeline\'s hourly aggregation system...')
+        hourly_aggregator = pipeline.hourly_aggregator
         
         # Get HTTP server configuration from Config
         http_host = Config.HTTP_SERVER["host"]
